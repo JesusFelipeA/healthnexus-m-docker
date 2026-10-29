@@ -11,6 +11,7 @@
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
 import * as api from '../api';
 import { getDeviceFingerprint } from './secureStorage';
+import { avisarCambioEmergencias } from './avisosEmergencia';
 
 // Pantallas a las que puede llevar una notificación (no se navega a nada fuera de esta lista).
 export const PANTALLAS_PERMITIDAS = ['Dashboard', 'Triage', 'Patients', 'AlertasFarmacia', 'Internas', 'Externas'];
@@ -62,7 +63,13 @@ async function registrar(token) {
   await api.registrarTokenPush(token, huella);
 }
 
+// Una emergencia nueva hace que el Dashboard recargue su lista de emergencias activas
+function avisarSiEsEmergencia(msg) {
+  if (msg && msg.data && msg.data.tipo === 'emergencia') avisarCambioEmergencias();
+}
+
 function abrir(remoteMessage, navegar) {
+  avisarSiEsEmergencia(remoteMessage);
   const pantalla = remoteMessage && remoteMessage.data && remoteMessage.data.pantalla;
   if (pantalla && PANTALLAS_PERMITIDAS.includes(pantalla)) navegar(pantalla);
 }
@@ -83,6 +90,7 @@ export async function iniciarPush(navegar) {
 
     suscripciones.push(m.onTokenRefresh(messaging, (nuevo) => registrar(nuevo).catch(() => {})));
     suscripciones.push(m.onMessage(messaging, (msg) => {
+      avisarSiEsEmergencia(msg);
       const n = msg.notification || {};
       if (!n.title) return;
       const botones = msg.data && PANTALLAS_PERMITIDAS.includes(msg.data.pantalla)

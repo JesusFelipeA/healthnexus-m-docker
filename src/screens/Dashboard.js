@@ -25,6 +25,7 @@ import {
   colors,
   shadow,
 } from '../components/ui';
+import EmergenciasActivas from '../components/EmergenciasActivas';
 import { useMenu } from '../navigation/menuContext';
 
 const ROL = {
@@ -378,6 +379,9 @@ export default function Dashboard() {
             
           </Animated.View>
         </Animated.View>
+
+        {/* Emergencias activas: solo aparece si hay alguna abierta */}
+        {!isFarmacia && <EmergenciasActivas />}
 
         {/* ====================================================
             DAILY SUMMARY
