@@ -1,0 +1,12 @@
+# maestro test .maestro   → corre los flujos en este orden
+flows:
+  - "0*.yaml"
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 01 Login con credenciales incorrectas
+    - 02 Enfermería · Dashboard y menú por rol
+    - 03 Médico · Login con PIN
+    - 04 Farmacia · Resumen y permisos
+    - 05 Enfermería · Código de emergencia
+    - 06 Cerrar sesión

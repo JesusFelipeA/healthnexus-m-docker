@@ -1,0 +1,24 @@
+# HU-42 · Farmacia ve su resumen y sus módulos, sin pacientes ni botón de emergencia.
+appId: com.healthnexusapp
+name: 04 Farmacia · Resumen y permisos
+tags: [roles]
+env:
+  CORREO: qa.farmacia@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del día"
+    timeout: 15000
+- assertVisible: "Medicamentos activos"
+- assertNotVisible: "Código de emergencia"
+- takeScreenshot: evidencia/04-dashboard-farmacia
+- tapOn: "Abrir menú"
+- assertVisible: "Medicamentos"
+- assertVisible: "Alertas"
+- assertNotVisible: "Pacientes"
+- assertNotVisible: "Triage"
+- takeScreenshot: evidencia/04-menu-farmacia

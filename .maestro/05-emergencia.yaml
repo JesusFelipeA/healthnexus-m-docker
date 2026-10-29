@@ -1,0 +1,36 @@
+# HU-39 · CP-32 · Enfermería activa un código de emergencia y aparece en el Dashboard.
+# Envía una notificación push real a los teléfonos con sesión de médico o enfermería en tu API local.
+# La API acepta 3 emergencias por minuto por usuario: espera un minuto entre ejecuciones seguidas.
+appId: com.healthnexusapp
+name: 05 Enfermería · Código de emergencia
+tags: [emergencias]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del día"
+    timeout: 15000
+- tapOn: "Código de emergencia"
+- assertVisible: "¿Activar el CÓDIGO DE EMERGENCIA?"
+- tapOn: "Activar"
+- extendedWaitUntil:
+    visible: "(?s)Código de emergencia registrado.*"
+    timeout: 15000
+- takeScreenshot: evidencia/05-emergencia-registrada
+- tapOn: "OK|Aceptar|ACEPTAR"
+# El bloque rojo del Dashboard muestra la emergencia
+- extendedWaitUntil:
+    visible: "\\d+ emergencias? activas?"
+    timeout: 10000
+- assertVisible: "Código de emergencia activado desde la app móvil"
+- takeScreenshot: evidencia/05-emergencias-activas
+# Atender pide confirmación (se cancela para no depender del orden de los botones del diálogo)
+- tapOn: "Atender emergencia \\d+"
+- assertVisible: "Atender emergencia"
+- tapOn: "Cancelar"
+- assertVisible: "\\d+ emergencias? activas?"

@@ -1,0 +1,24 @@
+# HU-39 · Enfermería entra al Dashboard y su menú solo muestra sus módulos.
+appId: com.healthnexusapp
+name: 02 Enfermería · Dashboard y menú por rol
+tags: [login, roles]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del día"
+    timeout: 15000
+- assertVisible: "Pacientes totales"
+- assertVisible: "Código de emergencia"      # botón flotante, solo médico y enfermería
+- takeScreenshot: evidencia/02-dashboard-enfermeria
+- tapOn: "Abrir menú"
+- assertVisible: "Triage"
+- assertVisible: "Signos vitales"
+- assertNotVisible: "Cuentas"                # solo administrador
+- assertNotVisible: "Medicamentos"           # solo farmacia
+- takeScreenshot: evidencia/02-menu-enfermeria
