@@ -1,7 +1,10 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+// Firebase: solo si existe google-services.json (no se sube al repo). Sin él, la app compila sin notificaciones push.
+if (file("google-services.json").exists()) {
+    apply plugin: "com.google.gms.google-services"
+}
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -58,7 +61,9 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
-def enableProguardInReleaseBuilds = false
+// R8: reduce el tamaño y ofusca el código de las compilaciones release.
+// Si algún día necesitas descartarlo para depurar un problema, pon hnMinify=false en gradle.properties.
+def enableProguardInReleaseBuilds = (findProperty('hnMinify') ?: 'true').toBoolean()
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -73,18 +78,29 @@ def enableProguardInReleaseBuilds = false
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Firma de release: lee android/keystore.properties (ese archivo NO se sube a Git).
+// Plantilla: android/keystore.properties.example  ·  Guía: docs/PLAY_STORE.md
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { stream -> keystoreProperties.load(stream) }
+} else {
+    logger.warn('AVISO: falta android/keystore.properties. La compilación release se firmará con la llave de DEBUG y Play Store la rechazará.')
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.healthnexus.app"
+    namespace "com.healthnexusapp"
     defaultConfig {
-        applicationId "com.healthnexus.app"
+        applicationId "com.healthnexusapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // Sube hnVersionCode en cada publicación (gradle.properties). Debe ser un entero mayor al anterior.
+        versionCode = (findProperty('hnVersionCode') ?: '1').toInteger()
+        versionName = (findProperty('hnVersionName') ?: '1.0.0')
     }
     signingConfigs {
         debug {
@@ -93,16 +109,24 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile rootProject.file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Con keystore.properties se firma con tu llave de subida; sin él, con la de debug (solo para pruebas locales).
+            signingConfig keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
@@ -118,3 +142,9 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+// Fuente de íconos (react-native-vector-icons)
+project.ext.vectoricons = [
+    iconFontNames: [ 'Ionicons.ttf' ]
+]
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")

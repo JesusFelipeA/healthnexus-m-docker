@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Fondo de la ventana mientras arranca la app (igual al de la pantalla de carga) -->
+    <color name="window_background">#FFFFFF</color>
+    <!-- Colores de marca para cursor, selección de texto y controles nativos -->
+    <color name="brand_primary">#4E2CCF</color>
+    <color name="brand_accent">#6B4DE6</color>
+</resources>
