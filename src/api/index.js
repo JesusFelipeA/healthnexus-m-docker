@@ -67,6 +67,9 @@ export const getSeguimiento = () => http.get('/seguimiento');
 export const getAuditoria = params => http.get(`/auditoria${qs(params)}`);
 export const activarEmergencia = (mensaje, ubicacion) =>
   http.post('/emergencias', ubicacion ? { mensaje, ubicacion } : { mensaje });
+// Emergencias abiertas (Dashboard) y marcarlas como atendidas
+export const getEmergenciasActivas = () => http.get('/emergencias/activas');
+export const atenderEmergencia = id => http.patch(`/emergencias/${id}/atender`);
 
 // Farmacia
 export const getFarmaciaResumen = () => http.get('/farmacia/resumen');

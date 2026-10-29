@@ -10,6 +10,8 @@ jest.mock('../src/context/AuthContext', () => ({ useAuth: jest.fn() }));
 jest.mock('../src/api', () => ({
   getStats: jest.fn(() => Promise.resolve({ totalPatients: 12, redCount: 2, yellowCount: 3, greenCount: 7 })),
   getFarmaciaResumen: jest.fn(() => Promise.resolve({})),
+  getEmergenciasActivas: jest.fn(() => Promise.resolve([])),
+  atenderEmergencia: jest.fn(() => Promise.resolve({})),
 }));
 
 const { useAuth } = require('../src/context/AuthContext');
