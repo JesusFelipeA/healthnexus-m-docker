@@ -1,0 +1,29 @@
+# HU-37 · El médico entra en dos pasos: contraseña y PIN de 4 dígitos.
+appId: com.healthnexusapp
+name: 03 Médico · Login con PIN
+tags: [login, seguridad]
+env:
+  CORREO: qa.medico@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Verificar PIN"
+    timeout: 15000
+# PIN incorrecto (el campo ya tiene el foco)
+- inputText: "0000"
+- tapOn: "Verificar PIN"
+- assertVisible: "PIN incorrecto."
+- assertNotVisible: "Resumen del día"
+- takeScreenshot: evidencia/03-pin-incorrecto
+# PIN correcto (la app limpia el campo después del error)
+- tapOn: "••••"
+- inputText: ${PIN}
+- tapOn: "Verificar PIN"
+- extendedWaitUntil:
+    visible: "Resumen del día"
+    timeout: 15000
+- takeScreenshot: evidencia/03-dashboard-medico

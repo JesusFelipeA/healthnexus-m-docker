@@ -90,3 +90,6 @@ ambientes.local.json
 # Configuración de Firebase del proyecto (se descarga de la consola; cada quien la coloca en su equipo)
 android/app/google-services.json
 ios/**/GoogleService-Info.plist
+
+.maestro/evidencia/
+reporte-app.xml

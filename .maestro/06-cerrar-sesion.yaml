@@ -1,0 +1,25 @@
+# HU-39 · Cerrar sesión regresa al login.
+appId: com.healthnexusapp
+name: 06 Cerrar sesión
+tags: [login]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del día"
+    timeout: 15000
+- tapOn: "Abrir menú"
+- tapOn: "Cerrar sesión"
+- assertVisible: "¿Quieres cerrar tu sesión?"
+- tapOn:
+    text: "Cerrar sesión"
+    rightOf: "Cancelar"       # el botón del diálogo, no el del menú
+- extendedWaitUntil:
+    visible: "Bienvenido de nuevo"
+    timeout: 10000
+- takeScreenshot: evidencia/06-sesion-cerrada

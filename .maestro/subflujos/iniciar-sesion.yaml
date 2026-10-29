@@ -1,0 +1,16 @@
+# Abre la app desde cero e inicia sesión. Recibe CORREO y CLAVE.
+appId: com.healthnexusapp
+---
+- launchApp:
+    clearState: true          # sin sesión ni datos guardados
+    permissions:
+      all: allow              # ubicación y notificaciones ya concedidas: no aparecen los diálogos del sistema
+- extendedWaitUntil:
+    visible: "Bienvenido de nuevo"
+    timeout: 20000
+- tapOn: "usuario@hospital.com"
+- inputText: ${CORREO}
+- tapOn: "••••••••"
+- inputText: ${CLAVE}
+- hideKeyboard
+- tapOn: "Iniciar sesión"
