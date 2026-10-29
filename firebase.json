@@ -1,0 +1,6 @@
+{
+  "react-native": {
+    "messaging_android_notification_channel_id": "alertas",
+    "messaging_auto_init_enabled": false
+  }
+}

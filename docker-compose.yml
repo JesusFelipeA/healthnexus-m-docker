@@ -1,0 +1,28 @@
+# Desarrollo: servidor Metro, pruebas y lint con Node 22.
+#   docker compose up -d metro          (y en la PC: adb reverse tcp:8081 tcp:8081)
+#   docker compose run --rm test
+#   docker compose run --rm lint
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  volumes:
+    - .:/app
+    - node_modules:/app/node_modules   # no mezclar dependencias de Windows con las de Linux
+
+services:
+  metro:
+    <<: *app
+    ports:
+      - "8081:8081"
+  test:
+    <<: *app
+    profiles: [tools]
+    command: npm test -- --ci
+  lint:
+    <<: *app
+    profiles: [tools]
+    command: npm run lint
+
+volumes:
+  node_modules:

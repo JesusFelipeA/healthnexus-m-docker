@@ -1,97 +1,155 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# HealthNexus – App móvil (React Native CLI)
 
-# Getting Started
+App Android hecha con **React Native CLI 0.87** que consume la API REST `healthnexus-api`.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Requisitos
+- **Node.js 22.11 o superior** (lo exige React Native 0.87).
+- JDK 17 o superior, Android Studio con SDK de Android y un emulador (o un celular con depuración USB).
+  Guía oficial de entorno: https://reactnative.dev/docs/set-up-your-development-environment
+- La API `healthnexus-api` en marcha.
 
-## Step 1: Start Metro
+## Puesta en marcha
+```
+npm install
+npx react-native start        # terminal 1: Metro
+npx react-native run-android  # terminal 2: instala la app en el emulador/celular
+```
+Inicia sesión con un usuario de tu tabla `users`.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Ambientes y URL de la API
+La app no tiene secretos (todo lo del APK se puede extraer); por ambiente solo cambia la URL de la API. Las URL están en `ambientes.json` y `scripts/set-env.js` escribe `src/env.js` (fuera de Git), que lee `src/config.js`.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+| Ambiente | URL | Cómo se usa |
+|---|---|---|
+| `dev` | `http://10.0.2.2:3000/api` (emulador) | `npm run env:dev` · se crea solo al hacer `npm install` |
+| `staging` | URL HTTPS del servidor de QA | `npm run env:staging` · `npm run release:apk:staging` |
+| `prod` | `https://healthnexus.duckdns.org/api` | `npm run release:apk` · `npm run release:aab` (siempre prod) |
 
-```sh
-# Using npm
-npm start
+- **Celular físico:** copia `ambientes.local.json.example` como `ambientes.local.json` (no se sube a Git), pon la IP de tu PC y ejecuta `npm run env:dev`.
+- `npm run env:ver` muestra el ambiente actual. En la pantalla de inicio de sesión, junto a la versión, aparece `DEV` o `STAGING` cuando no es producción.
+- Los comandos de release cambian a su ambiente solo mientras compilan y luego regresan al anterior. Staging y prod exigen HTTPS y una URL real (no `TU-DOMINIO`).
 
-# OR using Yarn
-yarn start
+- En **debug** Android permite HTTP; en **release** solo HTTPS, así que publica la API con HTTPS antes de generar el APK.
+- Si usas celular físico por USB, también sirve `adb reverse tcp:3000 tcp:3000` y la URL `http://localhost:3000/api`.
+- Agrega la IP/origen a `CORS_ORIGINS` solo si pruebas desde navegador; las apps nativas no usan CORS.
+
+## Docker en la app
+
+La app Android corre en un emulador o celular, no en un contenedor. Docker se usa para lo que sí es de servidor: las pruebas, el lint y la compilación firmada del release. Los archivos están en la raíz del proyecto:
+
+| Archivo | Para qué sirve |
+|---|---|
+| `Dockerfile.dev` y `docker-compose.yml` | Node 22 para correr Metro, las pruebas (`test`) y el lint (`lint`) |
+| `Dockerfile.build` | Imagen con JDK 17, Android SDK, NDK y Node 22 para generar el AAB/APK de release |
+| `.dockerignore` | Deja fuera `node_modules`, carpetas de compilación y llaves de firma |
+| `.gitattributes` | Fuerza saltos de línea LF para que `gradlew` funcione dentro de Linux |
+| `docs/DOCKER.md` | Esta misma guía con más detalle |
+
+### Desarrollo
+```
+docker compose run --rm test      # pruebas Jest
+docker compose run --rm lint      # ESLint
+```
+Para **Metro** hay dos formas:
+
+| Forma | Comandos | Cuándo usarla |
+|---|---|---|
+| En Windows (recomendada) | `npm start` | Detecta tus cambios al instante |
+| En Docker | `docker compose up -d metro` | Si el proyecto está dentro de WSL; en `C:\` a veces no ve los cambios y hay que ejecutar `docker compose restart metro` |
+
+Luego, con el celular conectado por USB y la depuración USB activa:
+```
+adb reverse tcp:8081 tcp:8081
+npx react-native run-android --no-packager --active-arch-only
+```
+- `--no-packager` evita abrir otro Metro (usa el que ya corre en el puerto 8081).
+- `--active-arch-only` compila solo la arquitectura de tu dispositivo; sin esta opción, en equipos con poca memoria la compilación puede fallar con "insufficient memory".
+- Si cambias archivos de `src/`, la app se actualiza sola (Fast Refresh); si no, agita el celular y elige **Reload**. Solo recompila (`run-android`) cuando cambias algo nativo (`android/`, permisos o librerías nuevas).
+
+### Compilar el release con Docker (AAB firmado)
+1. Una sola vez, construye la imagen: `docker build -f Dockerfile.build -t healthnexus-android-build .`
+2. Guarda el `.jks` y un `keystore.properties` **fuera del proyecto** (por ejemplo `C:\llaves\`); en ese archivo usa `storeFile=/secrets/healthnexus-upload.jks`.
+3. Revisa que la URL de `prod` en `ambientes.json` sea la HTTPS real de tu API.
+4. Compila (PowerShell):
+   ```
+   docker run --rm `
+     -v "${PWD}:/app" `
+     -v hn_node_modules:/app/node_modules `
+     -v hn_gradle_cache:/root/.gradle `
+     -v "C:/llaves/healthnexus-upload.jks:/secrets/healthnexus-upload.jks:ro" `
+     -v "C:/llaves/keystore.properties:/app/android/keystore.properties:ro" `
+     healthnexus-android-build `
+     sh -c "npm ci && npm run release:aab"
+   ```
+5. El AAB queda en `android/app/build/outputs/bundle/release/`. Sube `hnVersionCode` en cada publicación.
+
+La llave de firma se monta solo mientras se compila; nunca entra a la imagen ni a Git (`.gitignore` y `.dockerignore` excluyen `*.jks` y `keystore.properties`). Asigna a Docker Desktop al menos 8 GB de memoria.
+
+## Publicar en Google Play
+Guía completa, textos de la ficha y lista final: **[docs/PLAY_STORE.md](docs/PLAY_STORE.md)**. Resumen:
+```
+# 1) Una sola vez: crea tu llave (ver la guía) y copia android/keystore.properties.example → keystore.properties
+# 2) La URL de producción está en ambientes.json ("prod")
+npm run release:check     # revisa URL, llave, versión, iconos y permisos
+npm run release:apk       # APK para probar en un celular real
+npm run release:aab       # AAB que se sube a Play Console
+```
+En cada publicación sube `hnVersionCode` en `android/gradle.properties`. Plantilla de política de privacidad: [docs/POLITICA_DE_PRIVACIDAD.md](docs/POLITICA_DE_PRIVACIDAD.md). Gráficos para la ficha: carpeta `play-store/`.
+
+## Estructura
+```
+App.js                      # navegación (pantallas según el rol)
+src/
+├── config.js               # URL de la API (lee src/env.js, generado por scripts/set-env.js)
+├── api/client.js           # fetch base: token, errores, 401 → cierra sesión
+├── api/index.js            # una función por endpoint
+├── context/AuthContext.js  # sesión, rol y can(...roles)
+├── services/secureStorage.js  # token cifrado (react-native-keychain / Keystore)
+├── services/geolocation.js    # GPS para hospitales cercanos
+├── hooks/useFetch.js
+├── utils/triage.js         # niveles de triage, estados, formatos
+├── components/ui.js        # Screen, Card, Field, SelectField, Button...
+├── components/EmergencyButton.js
+└── screens/                # Login, Dashboard, Triage, Patients, Internas, Externas, Hospitals,
+                            # Seguimiento, Auditoria, SignosVitales, Medicacion,
+                            # Medicamentos, Existencias, Movimientos, AlertasFarmacia
 ```
 
-## Step 2: Build and run your app
+## Qué ve cada rol
+| Pantalla | Roles |
+|---|---|
+| Triage, Pacientes, Derivaciones internas, Hospitales, Seguimiento | médico, enfermería |
+| Derivaciones externas | médico (reservar cama en Hospitales: solo médico) |
+| Signos vitales, Medicación | enfermería registra · médico solo consulta |
+| Existencias por lote | farmacia, enfermería, médico (solo lectura, excepto farmacia) |
+| Movimientos de inventario | farmacia registra · enfermería solo consulta |
+| Medicamentos, Alertas de inventario | farmacia |
+| Auditoría | solo administrador |
+| Cuentas, estado de cuenta y recibos en PDF (descargar y compartir) | solo administrador |
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+El administrador ve todo. La API vuelve a validar los permisos en el servidor (los permisos coinciden con los de tu tabla `permissions`).
+Para probar enfermería y farmacia crea usuarios con `scripts/crear-usuario.js` (ver README de la API).
 
-### Android
+## Notificaciones push (Firebase Cloud Messaging)
 
-```sh
-# Using npm
-npm run android
+Al iniciar sesión, la app pide permiso de notificaciones (Android 13 o superior), obtiene el token del teléfono y lo registra en la API (`POST /notificaciones/token`, ligado a la huella del dispositivo). Al cerrar sesión lo borra. Llegan avisos de **código de emergencia** (médicos y enfermería) y de **paciente en nivel I** (médicos); al tocarlos se abre el Dashboard o Triage. Los mensajes no llevan nombres ni datos clínicos.
 
-# OR using Yarn
-yarn android
-```
+**Para activarlas en tu equipo:**
+1. En la consola de Firebase, en el proyecto de HealthNexus, agrega la app Android con el paquete `com.healthnexusapp` y descarga `google-services.json`.
+2. Cópialo en `android/app/google-services.json`. **No se sube al repo** (está en `.gitignore`); pásalo al equipo por un canal privado.
+3. Compila de nuevo: `npm run android` (o `npm run release:apk`).
 
-### iOS
+Sin ese archivo la app compila y funciona igual, solo que sin notificaciones. Las alertas usan el canal "Alertas de HealthNexus" con importancia alta (se crea en `MainApplication.kt`).
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## Librerías nativas usadas
+`@react-navigation/native` + `native-stack`, `react-native-screens`, `react-native-safe-area-context`,
+`react-native-keychain` (token seguro), `@react-native-community/geolocation` (GPS),
+`react-native-blob-util` (descarga el recibo PDF con el token) y `react-native-share` (compartirlo), `@react-native-firebase/app` y `messaging` (notificaciones push), `react-native-vector-icons` (Ionicons; la fuente ya está enlazada en `android/app/build.gradle`).
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+## Pruebas
+`npm test` (utilidades, emergencias, derivaciones, cuentas y recibos). La lógica de la API se probó contra `healthnexus-api`.
 
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## Pendiente
+- Escaneo de paciente con la cámara.
+- Dispensación de recetas (farmacia) y descuento de inventario al administrar medicación.
+- Solo está configurado Android; la carpeta `ios/` es la del proyecto base y no se probó.

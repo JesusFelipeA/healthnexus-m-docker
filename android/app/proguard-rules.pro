@@ -8,3 +8,9 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# ─── Reglas de HealthNexus ───────────────────────────────────────────────────
+# React Native y sus librerías ya incluyen sus propias reglas. Si una compilación release con R8 falla,
+# agrega aquí la clase que indique el error o pon hnMinify=false en gradle.properties para descartar a R8.
+-keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
+-dontwarn javax.annotation.**
