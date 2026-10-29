@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { activarEmergencia } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { getPositionDetail } from '../services/geolocation';
+import { avisarCambioEmergencias } from '../services/avisosEmergencia';
 import { Ico } from './ui';
 
 // Botón flotante de emergencia (visible solo con sesión iniciada)
@@ -24,6 +25,7 @@ export default function EmergencyButton() {
         new Promise((r) => setTimeout(() => r({ pos: null }), 3500)),
       ]);
       const r = await activarEmergencia('Código de emergencia activado desde la app móvil', pos || undefined);
+      avisarCambioEmergencias();
       Alert.alert('🚨 Emergencia', `Código de emergencia registrado.${r && r.id ? `\nNo. de registro: ${r.id}` : ''}`);
     } catch (e) {
       if (Number(e && e.status) === 0) {

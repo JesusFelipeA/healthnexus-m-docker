@@ -108,3 +108,20 @@ test('registra el manejador de mensajes en segundo plano', () => {
   push.registrarSegundoPlano();
   expect(m.setBackgroundMessageHandler).toHaveBeenCalled();
 });
+
+test('una emergencia que llega (app abierta o al tocar la notificación) avisa al Dashboard para recargar', async () => {
+  const { alCambiarEmergencias } = require('../src/services/avisosEmergencia');
+  const oyente = jest.fn();
+  const quitar = alCambiarEmergencias(oyente);
+  const { m, h } = fcmFalso();
+  push._reiniciar(m);
+  await push.iniciarPush(jest.fn());
+
+  h.message({ notification: { title: 'Código de emergencia activado' }, data: { tipo: 'emergencia', pantalla: 'Dashboard' } });
+  expect(oyente).toHaveBeenCalledTimes(1);
+  h.opened({ data: { tipo: 'emergencia', pantalla: 'Dashboard' } });
+  expect(oyente).toHaveBeenCalledTimes(2);
+  h.message({ notification: { title: 'Paciente en nivel I' }, data: { tipo: 'triage_rojo', pantalla: 'Triage' } });
+  expect(oyente).toHaveBeenCalledTimes(2);
+  quitar();
+});
