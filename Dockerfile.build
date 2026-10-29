@@ -1,0 +1,16 @@
+# Imagen de compilación del release (AAB/APK). No contiene el código ni la llave de firma:
+# ambos se montan al ejecutar (ver docs/DOCKER.md).
+FROM node:22-bookworm
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:/opt/android-sdk/cmdline-tools/latest/bin
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      openjdk-17-jdk-headless unzip curl ca-certificates git \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && cd /tmp \
+ && curl -fsSLo tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
+ && unzip -q tools.zip -d $ANDROID_HOME/cmdline-tools \
+ && mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest && rm tools.zip
+RUN yes | sdkmanager --licenses > /dev/null \
+ && sdkmanager "platform-tools" "platforms;android-37" "build-tools;37.0.0" \
+      "ndk;27.1.12297006" "cmake;3.22.1"
+WORKDIR /app

@@ -33,6 +33,8 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
+*.jks
+android/keystore.properties
 .kotlin/
 
 # node.js
@@ -75,3 +77,16 @@ yarn-error.log
 !.yarn/versions
 
 .env
+
+# secretos de firma (Docker/Play Store)
+*.jks
+keystore.properties
+android/keystore.properties
+
+# Ambiente de la app (lo genera scripts/set-env.js) y URL local de tu PC
+src/env.js
+ambientes.local.json
+
+# Configuración de Firebase del proyecto (se descarga de la consola; cada quien la coloca en su equipo)
+android/app/google-services.json
+ios/**/GoogleService-Info.plist
