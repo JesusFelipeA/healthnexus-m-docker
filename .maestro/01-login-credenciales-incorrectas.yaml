@@ -1,0 +1,13 @@
+# HU-39 · El login rechaza credenciales incorrectas con un mensaje controlado.
+appId: com.healthnexusapp
+name: 01 Login con credenciales incorrectas
+tags: [login]
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: "no-existe-${Date.now()}@healthnexus.test"
+      CLAVE: "clave-incorrecta"
+- assertVisible: "Correo o contraseña incorrectos."
+- assertNotVisible: "Resumen del día"
+- takeScreenshot: evidencia/01-login-incorrecto
