@@ -25,6 +25,11 @@ export const verificarPin = (pinToken, pin, fingerprint) =>
   );
 export const me = () => http.get('/auth/me');
 
+// Recuperar contraseña (sin sesión): correo -> código de 6 dígitos -> contraseña nueva
+export const recuperarClave = (email) => http.post('/auth/recuperar', { email });
+export const verificarCodigo = (email, codigo) => http.post('/auth/recuperar/verificar', { email, codigo });
+export const restablecerClave = (resetToken, nueva) => http.post('/auth/recuperar/restablecer', { resetToken, nueva });
+
 // Notificaciones push: token de Firebase de este teléfono (va ligado a la huella del dispositivo)
 export const registrarTokenPush = (token, fingerprint) =>
   http.post('/notificaciones/token', { token }, { 'X-Device-Fingerprint': fingerprint });
@@ -33,7 +38,8 @@ export const quitarTokenPush = (fingerprint) =>
 
 // Dashboard, pacientes y triage
 export const getStats = () => http.get('/stats');
-export const getPatients = (q) => http.get(`/patients${qs({ q })}`);
+// nivel: rojo | naranja | amarillo | verde | azul | sin (sin triage)
+export const getPatients = (q, nivel) => http.get(`/patients${qs({ q, nivel })}`);
 export const getPatient = (id) => http.get(`/patients/${id}`);
 export const createPatient = (data) => http.post('/patients', data);
 export const getTriagePatients = (params) => http.get(`/triage${qs(params)}`);

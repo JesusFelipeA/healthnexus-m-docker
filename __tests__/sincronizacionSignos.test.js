@@ -66,7 +66,7 @@ describe('Sincronización de signos vitales (Actividad 18)', () => {
     await guardar(r);
     await flush();
     expect(api.createSignos).toHaveBeenCalledWith(expect.objectContaining({ pacienteId: 9, temperatura: 36.8, frecuenciaCardiaca: 80, presionArterial: '120/80' }));
-    expect(Alert.alert).toHaveBeenCalledWith('Listo', 'Signos vitales registrados.');
+    expect(texto(r)).toContain('Signos vitales registrados'); // aviso breve (Toast) en lugar de una alerta
     expect(api.getSignos.mock.calls.length).toBeGreaterThan(consultasAntes);
     act(() => r.unmount());
   });

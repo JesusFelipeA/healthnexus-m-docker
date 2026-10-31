@@ -1,0 +1,32 @@
+# Apariencia: el tema oscuro se elige en la barra lateral y se conserva al volver a abrir la app.
+appId: com.healthnexusapp
+name: 08 Apariencia · tema oscuro
+tags: [visual]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- runFlow:
+    file: subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del turno"
+    timeout: 15000
+- tapOn: "Abrir menú"
+- assertVisible: "Apariencia"
+- tapOn: "Oscuro"
+- assertVisible: "Siempre oscuro: útil en turnos nocturnos."
+- takeScreenshot: evidencia/08-menu-oscuro
+- tapOn: "Cerrar menú"
+- takeScreenshot: evidencia/08-inicio-oscuro
+# Se conserva al reiniciar (sin borrar datos)
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: "Resumen del turno"
+    timeout: 15000
+- takeScreenshot: evidencia/08-inicio-oscuro-reiniciado
+# Deja el tema como estaba
+- tapOn: "Abrir menú"
+- tapOn: "Auto"

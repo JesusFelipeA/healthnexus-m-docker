@@ -81,3 +81,30 @@ export function esAnormal(clave, valor) {
   const n = Number(valor);
   return !!r && Number.isFinite(n) && fuera(n, r);
 }
+
+/** 'alto', 'bajo' o null según el rango normal (para la flecha ↑ ↓ de los mosaicos). */
+export function tendencia(clave, valor) {
+  if (valor === null || valor === undefined || valor === '') return null;
+  if (clave === 'presionArterial') {
+    const m = PRESION_RE.exec(String(valor).trim());
+    if (!m) return null;
+    const sis = Number(m[1]);
+    const dia = Number(m[2]);
+    if (sis > RANGOS_NORMALES.sistolica.max || dia > RANGOS_NORMALES.diastolica.max) return 'alto';
+    if (sis < RANGOS_NORMALES.sistolica.min || dia < RANGOS_NORMALES.diastolica.min) return 'bajo';
+    return null;
+  }
+  const r = RANGOS_NORMALES[clave];
+  const n = Number(valor);
+  if (!r || !Number.isFinite(n)) return null;
+  return n > r.max ? 'alto' : n < r.min ? 'bajo' : null;
+}
+
+/** Texto del rango normal: "36.1–37.5" o "90–139/60–89" para la presión. */
+export function rangoNormal(clave) {
+  if (clave === 'presionArterial') {
+    return `${rangoTexto(RANGOS_NORMALES.sistolica)}/${rangoTexto(RANGOS_NORMALES.diastolica)}`;
+  }
+  const r = RANGOS_NORMALES[clave];
+  return r ? rangoTexto(r) : '';
+}

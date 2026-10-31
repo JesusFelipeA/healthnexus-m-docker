@@ -1,7 +1,9 @@
 <resources>
 
-    <!-- Tema de la app: claro siempre (la interfaz de HealthNexus no tiene modo oscuro) -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- Tema de la app: DayNight para que los diálogos nativos (Alert) sigan el tema elegido en
+         Apariencia (la app llama a Appearance.setColorScheme). El fondo de arranque sigue siendo blanco,
+         igual que la pantalla de carga con el logo. Colores del modo oscuro: res/values-night/colors.xml -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowBackground">@color/window_background</item>
         <item name="colorPrimary">@color/brand_primary</item>

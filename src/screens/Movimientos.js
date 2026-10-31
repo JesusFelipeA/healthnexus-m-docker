@@ -265,14 +265,14 @@ export default function Movimientos({ route, navigation }) {
                 paddingVertical: 8,
                 borderRadius: 20,
                 marginRight: 8,
-                backgroundColor: active ? colors.teal : '#fff',
+                backgroundColor: active ? colors.teal : colors.surface,
               }}
             >
               <Text
                 style={{
                   fontWeight: '700',
                   fontSize: 12,
-                  color: active ? '#fff' : colors.sub,
+                  color: active ? colors.onPrimary : colors.sub,
                 }}
               >
                 {label}

@@ -66,7 +66,7 @@ test('enfermería ve las emergencias con quién la activó y el botón de ubicac
   const t = texto(r);
   expect(t).toContain('2 emergencias activas');
   expect(t).toContain('Código azul en urgencias');
-  expect(t).toContain('Activó: Enf. Ana');
+  expect(t).toContain('Activó Enf. Ana');
   expect(boton(r, 'Ver ubicación de la emergencia 7')).toBeTruthy();
   expect(boton(r, 'Ver ubicación de la emergencia 6')).toBeUndefined();
   expect(t).toContain('Sin ubicación');
