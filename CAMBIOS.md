@@ -1,3 +1,19 @@
+# Cambios: rediseño visual, tema oscuro y recuperar contraseña
+
+| Cambio | Archivos |
+|---|---|
+| **Tema claro y oscuro**: *Apariencia* en la barra lateral (Auto / Claro / Oscuro), se guarda en el teléfono; los diálogos nativos siguen el tema elegido | `src/theme/*`, `src/services/preferencias.js`, `App.js`, `MenuLateral.js`, `res/values/styles.xml` (DayNight), `res/values-night/colors.xml` |
+| Paleta de la maqueta (Inter-like, radios 12–16, toques de 44 px+), con contraste AA comprobado por pruebas en los dos temas; colores fijos reemplazados por los del tema | `ui.js`, `Paginator.js`, pantallas con `'#fff'` |
+| Componentes nuevos: `TriageBadge` (color + número + texto), `Chip`, `Segmented`, `Skeleton`, `Toast`; `Field` con ícono dentro, anillo de foco y botón para ver la contraseña; `Screen` con "deslizar para actualizar" | `ui.js` |
+| **Login** según la maqueta y **¿La olvidaste?** con su flujo: correo → código de 6 dígitos → contraseña nueva → listo | `Login.js`, `screens/recuperar/*`, `utils/recuperacion.js`, `api/index.js`, `api/client.js` (los errores conservan el `code` de la API) |
+| **Inicio**: saludo según la hora y primer nombre (antes "BUEN DÍA" fijo), fecha corta, "En línea · actualizado HH:MM", resumen del turno en mosaicos, accesos rápidos por rol y espacio libre para el botón de emergencia | `Dashboard.js`, `utils/fecha.js` |
+| Emergencias activas con el diseño de la maqueta (tarjeta roja tenue, botones de 44 px) | `EmergenciasActivas.js`, `EmergencyButton.js` |
+| **Pacientes**: iniciales, insignia de triage, filtros por nivel (usa `?nivel=` de la API), filas de carga y vacío con explicación | `Patients.js` |
+| **Signos vitales**: encabezado del paciente con alergias, mosaicos de la última toma con flecha ↑ ↓ y rango normal, aviso breve en lugar de la alerta "Listo" | `SignosVitales.js`, `utils/signosVitales.js` |
+| Pruebas: `tema`, `recuperarClave`, `rediseno` (+48) y Maestro 07 (recuperar contraseña) y 08 (tema oscuro); flujos 01–06 actualizados a los textos nuevos | `__tests__/`, `.maestro/`, `jest.setup.js` |
+
+---
+
 # Cambios de esta versión (preparación para Google Play)
 
 Alcance: **mejoras visuales y de empaquetado. No se cambió ninguna funcionalidad**: mismas pantallas, mismos endpoints,

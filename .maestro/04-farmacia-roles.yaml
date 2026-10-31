@@ -11,7 +11,7 @@ env:
       CORREO: ${CORREO}
       CLAVE: ${CLAVE}
 - extendedWaitUntil:
-    visible: "Resumen del día"
+    visible: "Resumen de farmacia"
     timeout: 15000
 - assertVisible: "Medicamentos activos"
 - assertNotVisible: "Código de emergencia"

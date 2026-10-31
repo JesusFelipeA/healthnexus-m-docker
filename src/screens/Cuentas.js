@@ -72,8 +72,8 @@ export default function Cuentas() {
           const on = f.id === filtro;
           return (
             <Pressable key={f.id} onPress={() => setFiltro(f.id)} accessibilityRole="button" accessibilityState={{ selected: on }}
-              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: on ? colors.teal : '#fff' }}>
-              <Text style={{ fontWeight: '700', fontSize: 12, color: on ? '#fff' : colors.sub }}>{f.label}</Text>
+              style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: on ? colors.teal : colors.surface }}>
+              <Text style={{ fontWeight: '700', fontSize: 12, color: on ? colors.onPrimary : colors.sub }}>{f.label}</Text>
             </Pressable>
           );
         })}

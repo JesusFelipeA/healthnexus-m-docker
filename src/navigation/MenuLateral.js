@@ -18,7 +18,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
-import { Ico, colors } from '../components/ui';
+import { Ico, Segmented, colors, conTema } from '../components/ui';
+import { useTema } from '../theme/TemaContext';
 import { INICIO, RUTAS_DE_MENU, seccionesVisibles } from './modulos';
 import { MenuContext } from './menuContext';
 
@@ -26,8 +27,21 @@ const ROL = { administrador: 'Administrador', medico: 'Médico', enfermeria: 'En
 const BORDE = 20; // ancho de la franja izquierda que abre el menú al deslizar
 const DURACION = 240;
 
+export const OPCIONES_TEMA = [
+  { id: 'auto', nombre: 'Auto', icono: 'phone-portrait-outline' },
+  { id: 'claro', nombre: 'Claro', icono: 'sunny-outline' },
+  { id: 'oscuro', nombre: 'Oscuro', icono: 'moon-outline' },
+];
+const NOTA_TEMA = {
+  auto: 'Sigue el tema de tu teléfono.',
+  claro: 'Siempre claro.',
+  oscuro: 'Siempre oscuro: útil en turnos nocturnos.',
+};
+
 export function MenuProvider({ navigationRef, rutaActual, children }) {
   const { user, can, logout } = useAuth();
+  const { preferencia, cambiarPreferencia } = useTema();
+  const s = estilos();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const ancho = Math.min(Math.round(width * 0.82), 340);
@@ -220,6 +234,13 @@ export function MenuProvider({ navigationRef, rutaActual, children }) {
               ) : null}
             </ScrollView>
 
+            {/* Apariencia: tema claro u oscuro */}
+            <View style={s.apariencia}>
+              <Text style={s.seccion}>Apariencia</Text>
+              <Segmented etiqueta="Apariencia" opciones={OPCIONES_TEMA} valor={preferencia} onChange={cambiarPreferencia} />
+              <Text style={s.notaTema}>{NOTA_TEMA[preferencia] || NOTA_TEMA.auto}</Text>
+            </View>
+
             {/* Pie: usuario + cerrar sesión */}
             <View style={s.pie}>
               <View style={s.usuario} accessible accessibilityLabel={`${user.nombre}, ${ROL[user.rol] || user.rol}`}>
@@ -243,15 +264,15 @@ export function MenuProvider({ navigationRef, rutaActual, children }) {
   );
 }
 
-const s = StyleSheet.create({
+const estilos = conTema((c) => StyleSheet.create({
   borde: { position: 'absolute', left: 0, bottom: 0, width: BORDE },
-  fondo: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(16, 42, 106, 0.45)' },
+  fondo: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.overlay },
   panel: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
-    backgroundColor: '#fff',
+    backgroundColor: colors.surface,
     borderTopRightRadius: 24,
     borderBottomRightRadius: 24,
     shadowColor: '#000',
@@ -261,7 +282,7 @@ const s = StyleSheet.create({
     elevation: 16,
   },
   encabezado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, minHeight: 56, marginBottom: 14 },
-  marca: { fontSize: 30, fontWeight: '800', color: colors.text, letterSpacing: -1 },
+  marca: { fontSize: 26, fontWeight: '800', color: colors.text, letterSpacing: -1 },
   marcaAcento: { color: colors.tealDeep },
   botonBuscar: { padding: 4 },
   buscador: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.bg, borderRadius: 14, paddingHorizontal: 12, height: 46, borderWidth: 1, borderColor: colors.line },
@@ -277,10 +298,12 @@ const s = StyleSheet.create({
   sinResultados: { textAlign: 'center', color: colors.sub, marginTop: 30, paddingHorizontal: 20 },
   pie: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.line },
   usuario: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.amber, alignItems: 'center', justifyContent: 'center' },
-  avatarTexto: { color: '#fff', fontWeight: '800', fontSize: 17 },
+  avatar: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
+  avatarTexto: { color: colors.tealDeep, fontWeight: '800', fontSize: 17 },
   usuarioNombre: { fontSize: 14, fontWeight: '700', color: colors.text },
   usuarioRol: { fontSize: 12, color: colors.sub, marginTop: 1 },
   salir: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 46, paddingHorizontal: 18, borderRadius: 23, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.line },
   salirTexto: { fontSize: 15, fontWeight: '700', color: colors.text },
-});
+  apariencia: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 14, borderTopWidth: 1, borderTopColor: colors.line },
+  notaTema: { fontSize: 12, color: colors.faint, marginTop: 8, paddingHorizontal: 2 },
+}));

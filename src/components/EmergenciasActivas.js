@@ -6,7 +6,7 @@ import useFetch from '../hooks/useFetch';
 import { alCambiarEmergencias } from '../services/avisosEmergencia';
 import { mensajeApi } from '../utils/errors';
 import { horaCorta, tiempoTranscurrido, urlMapa } from '../utils/emergencias';
-import { Ico, colors, shadow } from './ui';
+import { Ico, colors, conTema } from './ui';
 
 // Cada cuánto se vuelve a consultar mientras el Dashboard está abierto (además de los avisos push)
 export const INTERVALO_MS = 30000;
@@ -60,20 +60,24 @@ export default function EmergenciasActivas() {
     if (url) Linking.openURL(url).catch(() => Alert.alert('Ubicación', 'No se pudo abrir la app de mapas.'));
   };
 
+  const s = estilos();
   return (
     <View style={s.box} accessibilityRole="alert">
       <View style={s.header}>
-        <Ico name="pulse" size={20} color="#fff" />
+        <View style={s.icono}>
+          <Ico name="pulse" size={18} color="#FFFFFF" />
+        </View>
         <Text style={s.headerText}>
           {lista.length === 1 ? '1 emergencia activa' : `${lista.length} emergencias activas`}
         </Text>
+        <Text style={s.hace}>{tiempoTranscurrido(lista[0].creada)}</Text>
       </View>
 
       {lista.map((e, i) => (
         <View key={e.id} style={[s.item, i === lista.length - 1 && s.itemUltimo]}>
           <Text style={s.mensaje}>{e.mensaje}</Text>
           <Text style={s.detalle}>
-            {e.activadaPor ? `Activó: ${e.activadaPor} · ` : ''}
+            {e.activadaPor ? `Activó ${e.activadaPor} · ` : ''}
             {horaCorta(e.creada)} ({tiempoTranscurrido(e.creada)})
           </Text>
 
@@ -85,11 +89,13 @@ export default function EmergenciasActivas() {
                 accessibilityRole="button"
                 accessibilityLabel={`Ver ubicación de la emergencia ${e.id}`}
               >
-                <Ico name="location-outline" size={16} color={colors.danger} />
+                <Ico name="location-outline" size={18} color={colors.emergencyText} />
                 <Text style={[s.btnText, s.textoPeligro]}>Ver ubicación</Text>
               </Pressable>
             ) : (
-              <Text style={s.sinUbicacion}>Sin ubicación</Text>
+              <View style={[s.btn, s.sinUbicacionCaja]}>
+                <Text style={s.sinUbicacion}>Sin ubicación</Text>
+              </View>
             )}
 
             <Pressable
@@ -99,7 +105,7 @@ export default function EmergenciasActivas() {
               accessibilityRole="button"
               accessibilityLabel={`Atender emergencia ${e.id}`}
             >
-              <Ico name="checkmark-circle-outline" size={16} color="#fff" />
+              <Ico name="checkmark-circle-outline" size={18} color="#FFFFFF" />
               <Text style={[s.btnText, s.textoBlanco]}>{atendiendo === e.id ? 'Atendiendo...' : 'Atender'}</Text>
             </Pressable>
           </View>
@@ -109,42 +115,33 @@ export default function EmergenciasActivas() {
   );
 }
 
-const s = StyleSheet.create({
+// Colores de la maqueta: tarjeta roja tenue con acciones grandes (44 px o más)
+const estilos = conTema((c) => StyleSheet.create({
   box: {
-    backgroundColor: '#fff',
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: colors.danger,
-    marginBottom: 26,
+    backgroundColor: c.emergencyTint,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: c.emergencyLine,
+    marginBottom: 20,
     overflow: 'hidden',
-    ...shadow,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.danger,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerText: { color: '#fff', fontSize: 15, fontWeight: '800' },
-  item: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.line,
-  },
-  mensaje: { fontSize: 14, fontWeight: '700', color: colors.text },
-  detalle: { fontSize: 12, color: colors.sub, marginTop: 4 },
-  acciones: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 10 },
-  btn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12 },
-  btnPrimario: { backgroundColor: colors.danger },
-  btnSecundario: { backgroundColor: colors.dangerTint },
-  btnText: { fontSize: 13, fontWeight: '700' },
-  sinUbicacion: { fontSize: 12, color: colors.faint },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 14 },
+  icono: { width: 32, height: 32, borderRadius: 16, backgroundColor: c.emergency, alignItems: 'center', justifyContent: 'center' },
+  headerText: { flex: 1, color: c.emergencyText, fontSize: 15, fontWeight: '700' },
+  hace: { color: c.emergencyText, fontSize: 12 },
+  item: { paddingHorizontal: 14, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: c.emergencyLine },
+  mensaje: { fontSize: 15, fontWeight: '700', color: c.text },
+  detalle: { fontSize: 13, color: c.sub, marginTop: 4 },
+  acciones: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 10 },
+  btn: { flex: 1, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12 },
+  btnPrimario: { backgroundColor: c.emergency },
+  btnSecundario: { borderWidth: 1.5, borderColor: c.emergencyLine, backgroundColor: c.modo === 'oscuro' ? 'transparent' : c.surface },
+  sinUbicacionCaja: { borderWidth: 1, borderColor: c.emergencyLine, borderStyle: 'dashed' },
+  btnText: { fontSize: 14, fontWeight: '700' },
+  sinUbicacion: { fontSize: 13, color: c.sub },
   pressed: { opacity: 0.8 },
   itemUltimo: { borderBottomWidth: 0 },
   ocupado: { opacity: 0.6 },
-  textoPeligro: { color: colors.danger },
-  textoBlanco: { color: '#fff' },
-});
+  textoPeligro: { color: c.emergencyText },
+  textoBlanco: { color: '#FFFFFF' },
+}));

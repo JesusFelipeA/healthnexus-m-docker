@@ -41,8 +41,8 @@ export default function Auditoria() {
         <View style={{ flex: 1 }}><Field value={desde} onChangeText={setDesde} placeholder="Desde AAAA-MM-DD" keyboardType="numbers-and-punctuation" /></View>
         <View style={{ flex: 1 }}><Field value={hasta} onChangeText={setHasta} placeholder="Hasta AAAA-MM-DD" keyboardType="numbers-and-punctuation" /></View>
       </View>
-      <Pressable onPress={() => setOnlyCritical(!onlyCritical)} style={{ alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginBottom: 20, backgroundColor: onlyCritical ? colors.danger : '#fff' }}>
-        <Text style={{ fontWeight: '700', fontSize: 12, color: onlyCritical ? '#fff' : colors.sub }}>Solo críticas</Text>
+      <Pressable onPress={() => setOnlyCritical(!onlyCritical)} style={{ alignSelf: 'flex-start', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginBottom: 20, backgroundColor: onlyCritical ? colors.danger : colors.surface }}>
+        <Text style={{ fontWeight: '700', fontSize: 12, color: onlyCritical ? colors.onDanger : colors.sub }}>Solo críticas</Text>
       </Pressable>
 
       <ErrorBox message={error} />

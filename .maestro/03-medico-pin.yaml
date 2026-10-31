@@ -17,13 +17,13 @@ env:
 - inputText: "0000"
 - tapOn: "Verificar PIN"
 - assertVisible: "PIN incorrecto."
-- assertNotVisible: "Resumen del día"
+- assertNotVisible: "Resumen del turno"
 - takeScreenshot: evidencia/03-pin-incorrecto
 # PIN correcto (la app limpia el campo después del error)
 - tapOn: "••••"
 - inputText: ${PIN}
 - tapOn: "Verificar PIN"
 - extendedWaitUntil:
-    visible: "Resumen del día"
+    visible: "Resumen del turno"
     timeout: 15000
 - takeScreenshot: evidencia/03-dashboard-medico

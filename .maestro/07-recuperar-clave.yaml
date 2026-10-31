@@ -1,0 +1,36 @@
+# Recuperar contraseña: "¿La olvidaste?" -> correo -> código de 6 dígitos (un código incorrecto da un mensaje genérico).
+# El código real llega por correo (o a los logs de la API en desarrollo): este flujo no cambia la contraseña.
+appId: com.healthnexusapp
+name: 07 Recuperar contraseña
+tags: [login, seguridad]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Usa tu cuenta institucional del hospital."
+    timeout: 20000
+- tapOn: "¿La olvidaste?"
+- assertVisible: "Recupera tu contraseña"
+- assertVisible: "Paso 1 de 3"
+- assertVisible: ".*El PIN no se recupera por correo.*"
+- tapOn: "usuario@hospital.mx"
+- inputText: ${CORREO}
+- hideKeyboard
+- tapOn: "Enviar código"
+- extendedWaitUntil:
+    visible: "Revisa tu correo"
+    timeout: 15000
+- assertVisible: "Paso 2 de 3"
+- assertVisible: "¿No llegó\\? Podrás pedir otro en.*"
+- takeScreenshot: evidencia/07-codigo-enviado
+# Código incorrecto: mensaje genérico y las casillas se limpian
+- inputText: "000000"
+- extendedWaitUntil:
+    visible: "El código no es válido o ya venció."
+    timeout: 10000
+- takeScreenshot: evidencia/07-codigo-incorrecto
+- tapOn: "Volver a escribir el correo"
+- tapOn: "Volver a iniciar sesión"
+- assertVisible: "Usa tu cuenta institucional del hospital."

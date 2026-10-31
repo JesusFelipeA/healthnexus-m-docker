@@ -1,6 +1,6 @@
 # Pruebas de extremo a extremo de la app con Maestro
 
-Seis flujos que manejan la app en tu celular como lo haría un usuario y guardan capturas como evidencia:
+Ocho flujos que manejan la app en tu celular como lo haría un usuario y guardan capturas como evidencia:
 
 | Flujo | Qué prueba |
 | --- | --- |
@@ -10,6 +10,8 @@ Seis flujos que manejan la app en tu celular como lo haría un usuario y guardan
 | 04 | Farmacia ve su resumen, sin pacientes ni botón de emergencia |
 | 05 | Enfermería activa un código de emergencia y aparece en el Dashboard |
 | 06 | Cerrar sesión regresa al login |
+| 07 | Recuperar contraseña: correo, código (un código incorrecto da un mensaje genérico) y regreso al login |
+| 08 | Apariencia: elegir tema oscuro en la barra lateral y que se conserve al reiniciar la app |
 
 ## Instalar Maestro (una vez)
 
@@ -31,4 +33,5 @@ maestro test .maestro -e CLAVE="Qa-Hospital-2026!" -e PIN=2468 --format junit --
 - Corre un solo flujo: `maestro test .maestro\03-medico-pin.yaml -e CLAVE=... -e PIN=2468`
 - Las capturas quedan en la carpeta `evidencia\`.
 - El flujo 05 envía una notificación push real a los teléfonos con sesión en tu API local, y deja la emergencia activa (la colección de Postman las atiende).
+- El flujo 07 pide un código real a la API (cuenta para el límite de 3 por hora por correo); el código queda en los logs de la API en desarrollo.
 - Si un paso no encuentra un elemento, abre `maestro studio`: muestra la pantalla y el selector correcto para cada elemento.

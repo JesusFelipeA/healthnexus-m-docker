@@ -6,11 +6,11 @@ appId: com.healthnexusapp
     permissions:
       all: allow              # ubicación y notificaciones ya concedidas: no aparecen los diálogos del sistema
 - extendedWaitUntil:
-    visible: "Bienvenido de nuevo"
+    visible: "Usa tu cuenta institucional del hospital."
     timeout: 20000
-- tapOn: "usuario@hospital.com"
+- tapOn: "usuario@hospital.mx"
 - inputText: ${CORREO}
-- tapOn: "••••••••"
+- tapOn: "Tu contraseña"
 - inputText: ${CLAVE}
 - hideKeyboard
 - tapOn: "Iniciar sesión"

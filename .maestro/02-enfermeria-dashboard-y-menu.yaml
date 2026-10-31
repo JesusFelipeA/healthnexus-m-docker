@@ -11,9 +11,10 @@ env:
       CORREO: ${CORREO}
       CLAVE: ${CLAVE}
 - extendedWaitUntil:
-    visible: "Resumen del día"
+    visible: "Resumen del turno"
     timeout: 15000
-- assertVisible: "Pacientes totales"
+- assertVisible: "Pacientes registrados"
+- assertVisible: "Accesos rápidos"
 - assertVisible: "Código de emergencia"      # botón flotante, solo médico y enfermería
 - takeScreenshot: evidencia/02-dashboard-enfermeria
 - tapOn: "Abrir menú"

@@ -6,19 +6,14 @@ import {
   Text,
   View,
 } from 'react-native';
+// Colores del tema actual (claro u oscuro); se pueden sobrescribir con la prop `colors`.
+import { colors as DEFAULT_COLORS } from '../theme/paletas';
 
 // ============================================================
 // COLORES POR DEFECTO (fallback si no se pasan por prop)
 // ============================================================
 
-const DEFAULT_COLORS = {
-  text: '#102A6A',
-  sub: '#4F5D7A',
-  faint: '#8B96B2',
-  line: '#DDE4F0',
-  tealDeep: '#4E2CCF',
-  mint: '#EEE9FF',
-};
+
 
 // ============================================================
 // CONFIG
@@ -58,10 +53,10 @@ function PageButton({ label, active, disabled, onPress, palette }) {
       disabled={disabled || active}
       style={({ pressed }) => [
         s.pageButton,
-        { borderColor: palette.line, backgroundColor: '#fff' },
+        { borderColor: palette.line, backgroundColor: palette.surface || DEFAULT_COLORS.surface },
         active && {
-          backgroundColor: palette.tealDeep,
-          borderColor: palette.tealDeep,
+          backgroundColor: palette.teal || palette.tealDeep,
+          borderColor: palette.teal || palette.tealDeep,
         },
         disabled && s.pageButtonDisabled,
         pressed && !active && !disabled && s.pageButtonPressed,
@@ -71,7 +66,7 @@ function PageButton({ label, active, disabled, onPress, palette }) {
         style={[
           s.pageButtonText,
           { color: palette.text },
-          active && { color: '#fff' },
+          active && { color: palette.onPrimary || '#fff' },
           disabled && { color: palette.faint },
         ]}
       >
@@ -135,7 +130,7 @@ export default function Paginator({
               style={[
                 s.sizeButton,
                 {
-                  backgroundColor: '#fff',
+                  backgroundColor: palette.surface || DEFAULT_COLORS.surface,
                   borderColor: palette.line,
                 },
               ]}
@@ -156,7 +151,7 @@ export default function Paginator({
         <View
           style={[
             s.sizeMenu,
-            { backgroundColor: '#fff', borderColor: palette.line },
+            { backgroundColor: palette.surface || DEFAULT_COLORS.surface, borderColor: palette.line },
           ]}
         >
           {pageSizes.map((n) => {

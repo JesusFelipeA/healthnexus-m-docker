@@ -39,8 +39,8 @@ export default function Medicamentos() {
       <Field value={q} onChangeText={setQ} placeholder="Buscar por nombre, sustancia o código..." autoCapitalize="none" style={{}} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20, flexGrow: 0 }}>
         {FILTERS.map(([id, label]) => (
-          <Pressable key={id || 'all'} onPress={() => setEstado(id)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8, backgroundColor: estado === id ? colors.teal : '#fff' }}>
-            <Text style={{ fontWeight: '700', fontSize: 12, color: estado === id ? '#fff' : colors.sub }}>{label}</Text>
+          <Pressable key={id || 'all'} onPress={() => setEstado(id)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, marginRight: 8, backgroundColor: estado === id ? colors.teal : colors.surface }}>
+            <Text style={{ fontWeight: '700', fontSize: 12, color: estado === id ? colors.onPrimary : colors.sub }}>{label}</Text>
           </Pressable>
         ))}
       </ScrollView>

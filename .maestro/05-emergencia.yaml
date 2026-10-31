@@ -13,7 +13,7 @@ env:
       CORREO: ${CORREO}
       CLAVE: ${CLAVE}
 - extendedWaitUntil:
-    visible: "Resumen del día"
+    visible: "Resumen del turno"
     timeout: 15000
 - tapOn: "Código de emergencia"
 - assertVisible: "¿Activar el CÓDIGO DE EMERGENCIA?"

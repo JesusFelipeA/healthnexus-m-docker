@@ -140,14 +140,14 @@ export default function Triage() {
               paddingVertical: 8,
               borderRadius: 20,
               marginRight: 8,
-              backgroundColor: nivel === id ? colors.teal : '#fff',
+              backgroundColor: nivel === id ? colors.teal : colors.surface,
             }}
           >
             <Text
               style={{
                 fontWeight: '700',
                 fontSize: 12,
-                color: nivel === id ? '#fff' : colors.sub,
+                color: nivel === id ? colors.onPrimary : colors.sub,
               }}
             >
               {label}
@@ -266,7 +266,7 @@ export default function Triage() {
                             borderRadius: 12,
                             borderWidth: 2,
                             borderColor: info.color,
-                            backgroundColor: cur ? info.color : '#fff',
+                            backgroundColor: cur ? info.color : colors.surface,
                             opacity: busy ? 0.6 : 1,
                           }}
                         >

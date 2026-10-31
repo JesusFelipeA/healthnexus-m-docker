@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { Alert, Text, View } from 'react-native';
 
-import { createSignos, getPatients, getSignos } from '../api';
+import { createSignos, getPatient, getPatients, getSignos } from '../api';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -21,11 +21,12 @@ import {
   Screen,
   SectionTitle,
   SelectField,
+  Toast,
   colors,
 } from '../components/ui';
 
 import { fmtDateTime } from '../utils/triage';
-import { esAnormal, revisarSignos } from '../utils/signosVitales';
+import { esAnormal, rangoNormal, revisarSignos, tendencia } from '../utils/signosVitales';
 import { mensajeApi } from '../utils/errors';
 
 const EMPTY = {
@@ -43,6 +44,69 @@ const EMPTY = {
 
 const toNum = v => (v.trim() === '' ? undefined : Number(v.replace(',', '.')));
 
+const SEXO = { hombre: 'Hombre', mujer: 'Mujer', otro: 'Otro' };
+
+// Mosaicos de la última toma: valor grande, flecha si está fuera del rango normal y el rango como referencia
+const MOSAICOS = [
+  { campo: 'temperatura', clave: 'temperatura', etiqueta: 'Temperatura', unidad: '°C' },
+  { campo: 'fc', clave: 'frecuenciaCardiaca', etiqueta: 'Frec. cardiaca', unidad: 'lpm' },
+  { campo: 'spo2', clave: 'saturacionOxigeno', etiqueta: 'SpO₂', unidad: '%' },
+  { campo: 'presion', clave: 'presionArterial', etiqueta: 'Presión', unidad: 'mmHg' },
+  { campo: 'fr', clave: 'frecuenciaRespiratoria', etiqueta: 'Frec. resp.', unidad: 'rpm' },
+  { campo: 'glucosa', clave: 'glucosa', etiqueta: 'Glucosa', unidad: 'mg/dL' },
+];
+
+function MosaicoSigno({ etiqueta, valor, unidad, clave }) {
+  const t = tendencia(clave, valor);
+  const fuera = !!t;
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${etiqueta}: ${valor} ${unidad}${fuera ? `, ${t === 'alto' ? 'alto' : 'bajo'}, fuera del rango normal` : ''}`}
+      style={{
+        flexBasis: '47%',
+        flexGrow: 1,
+        backgroundColor: fuera ? colors.dangerTint : colors.surface,
+        borderWidth: 1,
+        borderColor: fuera ? colors.dangerBorder : colors.line,
+        borderRadius: 14,
+        padding: 12,
+        gap: 2,
+      }}
+    >
+      <Text style={{ fontSize: 12, fontWeight: '600', color: fuera ? colors.dangerText : colors.label }}>{etiqueta}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+        <Text style={{ fontSize: 24, fontWeight: '700', color: fuera ? colors.dangerText : colors.text }}>{valor}</Text>
+        <Text style={{ fontSize: 12, color: fuera ? colors.dangerText : colors.sub }}>{unidad}</Text>
+        {fuera ? <Text style={{ fontSize: 18, fontWeight: '800', color: colors.dangerText }}>{t === 'alto' ? '↑' : '↓'}</Text> : null}
+      </View>
+      <Text style={{ fontSize: 11, color: fuera ? colors.dangerText : colors.faint }}>Normal {rangoNormal(clave)}</Text>
+    </View>
+  );
+}
+
+// Encabezado del paciente elegido: nombre, edad y alergias (dato crítico antes de medicar)
+function EncabezadoPaciente({ paciente }) {
+  const ficha = useFetch(() => (typeof getPatient === 'function' ? getPatient(paciente.id) : Promise.resolve(null)), [paciente.id]);
+  const alergias = ficha.data && ficha.data.alergias;
+  return (
+    <Card style={{ gap: 6 }}>
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>{paciente.name}</Text>
+      {paciente.age !== undefined ? (
+        <Text style={{ fontSize: 13, color: colors.sub }}>
+          {paciente.age} años{paciente.sexo ? ` · ${SEXO[paciente.sexo] || paciente.sexo}` : ''}
+        </Text>
+      ) : null}
+      {alergias ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: colors.dangerTint, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, marginTop: 4 }}>
+          <Ico name="warning-outline" size={14} color={colors.dangerText} />
+          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.dangerText }}>Alergia: {alergias}</Text>
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
 export default function SignosVitales() {
   const { can } = useAuth();
   const canWrite = can('enfermeria');
@@ -52,11 +116,14 @@ export default function SignosVitales() {
   const [f, setF] = useState(EMPTY);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [aviso, setAviso] = useState('');
 
   const patients = useFetch(getPatients, []);
   const list = useFetch(() => getSignos(pacienteId), [pacienteId]);
 
   const records = list.data || [];
+  const seleccionado = (patients.data || []).find((p) => String(p.id) === String(pacienteId));
+  const ultima = pacienteId ? records[0] : null;
 
   /* ===== Paginación ===== */
   const {
@@ -117,7 +184,7 @@ export default function SignosVitales() {
 
     try {
       await createSignos(body);
-      Alert.alert('Listo', 'Signos vitales registrados.');
+      setAviso('Signos vitales registrados');
       setShowForm(false);
       setF(EMPTY);
       list.reload(true);
@@ -137,26 +204,29 @@ export default function SignosVitales() {
         key={label}
         accessibilityLabel={anormal ? `${label} fuera del rango normal` : undefined}
         style={{
-          backgroundColor: anormal ? colors.dangerTint : colors.bg,
+          backgroundColor: anormal ? colors.dangerTint : colors.surfaceAlt,
           paddingHorizontal: 10,
           paddingVertical: 6,
           borderRadius: 10,
         }}
       >
-        <Text style={{ fontSize: 11, color: anormal ? colors.danger : colors.sub }}>{label}</Text>
-        <Text style={{ fontSize: 14, fontWeight: '800', color: anormal ? colors.danger : colors.text }}>
+        <Text style={{ fontSize: 11, color: anormal ? colors.dangerText : colors.sub }}>{label}</Text>
+        <Text style={{ fontSize: 14, fontWeight: '800', color: anormal ? colors.dangerText : colors.text }}>
           {value}
           {unit}
+          {anormal ? (tendencia(clave, value) === 'bajo' ? ' ↓' : ' ↑') : ''}
         </Text>
       </View>
     );
   };
 
   return (
+    <>
     <Screen
       title="Signos vitales"
       icon="pulse-outline"
-      iconColor={colors.coral}
+      iconColor={colors.teal}
+      onRefresh={() => { patients.reload(true); return list.reload(true); }}
     >
       <SelectField
         label="Paciente"
@@ -169,6 +239,22 @@ export default function SignosVitales() {
           label: p.name,
         }))}
       />
+
+      {pacienteId && seleccionado ? <EncabezadoPaciente paciente={seleccionado} /> : null}
+
+      {pacienteId && ultima ? (
+        <View style={{ marginBottom: 16 }}>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 2 }}>Última toma</Text>
+          <Text style={{ fontSize: 12, color: colors.faint, marginBottom: 10 }}>
+            {fmtDateTime(ultima.fecha)}{ultima.registradoPor ? ` · ${ultima.registradoPor}` : ''}
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {MOSAICOS.filter((m) => ultima[m.campo] !== null && ultima[m.campo] !== undefined && ultima[m.campo] !== '').map((m) => (
+              <MosaicoSigno key={m.campo} etiqueta={m.etiqueta} valor={ultima[m.campo]} unidad={m.unidad} clave={m.clave} />
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {pacienteId ? (
         <Button
@@ -316,7 +402,7 @@ export default function SignosVitales() {
         </Card>
       )}
 
-      <SectionTitle>Registros recientes</SectionTitle>
+      <SectionTitle>{pacienteId ? 'Historial' : 'Registros recientes'}</SectionTitle>
 
       {list.loading && !list.data ? (
         <Loading />
@@ -396,5 +482,7 @@ export default function SignosVitales() {
         </>
       )}
     </Screen>
+    <Toast message={aviso} onHide={() => setAviso('')} />
+    </>
   );
 }
