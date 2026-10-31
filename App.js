@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StatusBar, View } from 'react-native';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -7,8 +7,13 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import EmergencyButton from './src/components/EmergencyButton';
 import { MenuProvider } from './src/navigation/MenuLateral';
 import { colors } from './src/components/ui';
+import { TemaProvider, useTema } from './src/theme/TemaContext';
 import { iniciarPush } from './src/services/push';
 import Login from './src/screens/Login';
+import RecuperarCorreo from './src/screens/recuperar/RecuperarCorreo';
+import RecuperarCodigo from './src/screens/recuperar/RecuperarCodigo';
+import RecuperarClave from './src/screens/recuperar/RecuperarClave';
+import RecuperarListo from './src/screens/recuperar/RecuperarListo';
 import Dashboard from './src/screens/Dashboard';
 import Triage from './src/screens/Triage';
 import Patients from './src/screens/Patients';
@@ -37,9 +42,16 @@ function Routes() {
     return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: colors.bg }}><ActivityIndicator color={colors.teal} size="large" /></View>;
   }
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
       {!user ? (
-        <Stack.Screen name="Login" component={Login} />
+        <>
+          <Stack.Screen name="Login" component={Login} />
+          {/* Recuperar contraseña con un código de 6 dígitos por correo */}
+          <Stack.Screen name="RecuperarCorreo" component={RecuperarCorreo} />
+          <Stack.Screen name="RecuperarCodigo" component={RecuperarCodigo} />
+          <Stack.Screen name="RecuperarClave" component={RecuperarClave} />
+          <Stack.Screen name="RecuperarListo" component={RecuperarListo} />
+        </>
       ) : (
         <>
           <Stack.Screen name="Dashboard" component={Dashboard} />
@@ -94,26 +106,44 @@ function NotificacionesPush() {
   return null;
 }
 
-export default function App() {
-  // Ruta visible: la barra lateral la usa para resaltar el módulo actual
+// Al cambiar de tema se vuelven a montar las pantallas (para que tomen la paleta nueva),
+// conservando la pantalla en la que estaba el usuario.
+function Contenido() {
+  const { modo } = useTema();
   const [rutaActual, setRutaActual] = useState(null);
-  const actualizarRuta = () => setRutaActual(navigationRef.getCurrentRoute()?.name ?? null);
+  const estadoNav = useRef(undefined);
+  const actualizarRuta = () => {
+    setRutaActual(navigationRef.getCurrentRoute()?.name ?? null);
+    if (navigationRef.isReady()) estadoNav.current = navigationRef.getRootState();
+  };
 
   return (
-    <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
-      <AuthProvider>
-        <View style={{ flex: 1 }}>
-          {/* La barra lateral se dibuja encima de las pantallas y del botón de emergencia */}
-          <MenuProvider navigationRef={navigationRef} rutaActual={rutaActual}>
-            <NavigationContainer ref={navigationRef} onReady={actualizarRuta} onStateChange={actualizarRuta}>
+    <>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.bg} />
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        {/* La barra lateral se dibuja encima de las pantallas y del botón de emergencia */}
+        <MenuProvider navigationRef={navigationRef} rutaActual={rutaActual}>
+          <React.Fragment key={modo}>
+            <NavigationContainer ref={navigationRef} initialState={estadoNav.current} onReady={actualizarRuta} onStateChange={actualizarRuta}>
               <Routes />
             </NavigationContainer>
             <EmergencyButton />
-            <NotificacionesPush />
-          </MenuProvider>
-        </View>
-      </AuthProvider>
+          </React.Fragment>
+          <NotificacionesPush />
+        </MenuProvider>
+      </View>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <TemaProvider>
+        <AuthProvider>
+          <Contenido />
+        </AuthProvider>
+      </TemaProvider>
     </SafeAreaProvider>
   );
 }

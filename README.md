@@ -108,8 +108,11 @@ src/
 ├── services/geolocation.js    # GPS para hospitales cercanos
 ├── hooks/useFetch.js
 ├── utils/triage.js         # niveles de triage, estados, formatos
-├── components/ui.js        # Screen, Card, Field, SelectField, Button...
+├── theme/paletas.js        # colores del tema claro y oscuro (colors, conTema, insignias de triage)
+├── theme/TemaContext.js    # tema Auto / Claro / Oscuro (se elige en la barra lateral)
+├── components/ui.js        # Screen, Card, Field, SelectField, Button, Chip, TriageBadge, Toast, Skeleton...
 ├── components/EmergencyButton.js
+├── screens/recuperar/      # recuperar contraseña: correo → código de 6 dígitos → contraseña nueva → listo
 └── screens/                # Login, Dashboard, Triage, Patients, Internas, Externas, Hospitals,
                             # Seguimiento, Auditoria, SignosVitales, Medicacion,
                             # Medicamentos, Existencias, Movimientos, AlertasFarmacia
@@ -130,6 +133,21 @@ src/
 El administrador ve todo. La API vuelve a validar los permisos en el servidor (los permisos coinciden con los de tu tabla `permissions`).
 Para probar enfermería y farmacia crea usuarios con `scripts/crear-usuario.js` (ver README de la API).
 
+## Apariencia (tema claro y oscuro)
+
+En la barra lateral, **Apariencia** ofrece *Auto* (sigue el tema del teléfono), *Claro* y *Oscuro*. La elección se guarda en el teléfono (con `react-native-keychain`, en un servicio aparte del token) y se conserva al reiniciar la app.
+
+Cómo funciona: `src/theme/paletas.js` define las dos paletas con los mismos nombres de color. `colors` es un solo objeto que se actualiza al cambiar de tema, y `App.js` vuelve a montar las pantallas conservando la pantalla actual. Para estilos nuevos usa `conTema`:
+```js
+const estilos = conTema((c) => StyleSheet.create({ caja: { backgroundColor: c.surface, borderColor: c.line } }));
+function MiPantalla() { const s = estilos(); /* ... */ }
+```
+No escribas colores fijos (`'#fff'`, `'#102A6A'`): usa `colors.surface`, `colors.text`, `colors.onPrimary`, etc. Las pruebas (`__tests__/tema.test.js`) revisan que todos los textos tengan contraste AA en los dos temas.
+
+## Recuperar contraseña
+
+En el login, **¿La olvidaste?** abre el flujo: correo → código de 6 dígitos (vence en 15 minutos; se puede pedir otro a los 60 s) → contraseña nueva (8+ caracteres, una mayúscula y un número) → listo. La contraseña nueva sirve en la app y en la web, y las sesiones abiertas de la app se cierran. El **PIN del médico no se recupera por correo**: lo regenera el administrador en la web. Requiere la versión de la API con `/auth/recuperar` y la tabla `database/recuperacion.sql`.
+
 ## Notificaciones push (Firebase Cloud Messaging)
 
 Al iniciar sesión, la app pide permiso de notificaciones (Android 13 o superior), obtiene el token del teléfono y lo registra en la API (`POST /notificaciones/token`, ligado a la huella del dispositivo). Al cerrar sesión lo borra. Llegan avisos de **código de emergencia** (médicos y enfermería) y de **paciente en nivel I** (médicos); al tocarlos se abre el Dashboard o Triage. Los mensajes no llevan nombres ni datos clínicos.
@@ -147,7 +165,7 @@ Sin ese archivo la app compila y funciona igual, solo que sin notificaciones. La
 `react-native-blob-util` (descarga el recibo PDF con el token) y `react-native-share` (compartirlo), `@react-native-firebase/app` y `messaging` (notificaciones push), `react-native-vector-icons` (Ionicons; la fuente ya está enlazada en `android/app/build.gradle`).
 
 ## Pruebas
-`npm test` (utilidades, emergencias, derivaciones, cuentas y recibos). La lógica de la API se probó contra `healthnexus-api`.
+`npm test` (utilidades, emergencias, derivaciones, cuentas, recibos, tema claro/oscuro, recuperar contraseña y las pantallas rediseñadas). Pruebas de extremo a extremo con Maestro en `.maestro/` (ver su README).
 
 ## Pendiente
 - Escaneo de paciente con la cámara.

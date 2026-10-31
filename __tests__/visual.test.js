@@ -81,7 +81,7 @@ describe('EmergencyButton', () => {
     const b = r.root.findByProps({ accessibilityLabel: 'Código de emergencia' });
     const st = flat(b.props.style({ pressed: false }));
     expect(st.bottom).toBe(24 + metrics.insets.bottom);
-    expect(st.backgroundColor).toBe('#DC2626');
+    expect(st.backgroundColor).toBe(colors.emergency); // rojo de emergencia de la maqueta
   });
 });
 
@@ -101,7 +101,7 @@ describe('Login', () => {
     const j = texts(r);
     expect(j).toContain(colors.tealDeep);
     expect(j).toContain(colors.bg);
-    expect(j).toContain('"paddingTop":52'); // 24 (barra de estado) + 28
+    expect(j).toContain('"paddingTop":64'); // 24 (barra de estado) + 40
     act(() => r.unmount());
   });
 });

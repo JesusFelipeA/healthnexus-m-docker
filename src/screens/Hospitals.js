@@ -80,12 +80,12 @@ export default function Hospitals() {
       })}
 
       <Modal visible={!!ticket} transparent animationType="fade" onRequestClose={() => setTicket(null)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 24 }}>
+        <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', padding: 24 }}>
           {ticket && (
-            <View style={{ backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden' }}>
-              <View style={{ backgroundColor: colors.tealDeep, padding: 24, alignItems: 'center' }}>
-                <Ico name="ticket-outline" size={40} color="#fff" />
-                <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', marginTop: 8 }}>PASE DE SALIDA</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 24, overflow: 'hidden' }}>
+              <View style={{ backgroundColor: colors.teal, padding: 24, alignItems: 'center' }}>
+                <Ico name="ticket-outline" size={40} color={colors.onPrimary} />
+                <Text style={{ color: colors.onPrimary, fontSize: 22, fontWeight: '800', marginTop: 8 }}>PASE DE SALIDA</Text>
               </View>
               <View style={{ padding: 24 }}>
                 <Row k="Ticket No:" v={ticket.id} />

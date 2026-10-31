@@ -99,8 +99,8 @@ describe('Pantalla de inicio de sesión', () => {
 
   test('P02: con un correo inválido se muestra un mensaje controlado y no se envía nada', async () => {
     const r = render(<Login />);
-    escribir(r, 'usuario@hospital.com', 'no-es-un-correo');
-    escribir(r, '••••••••', 'cualquiera');
+    escribir(r, 'usuario@hospital.mx', 'no-es-un-correo');
+    escribir(r, 'Tu contraseña', 'cualquiera');
     await pulsar(r);
     expect(login).not.toHaveBeenCalled();
     expect(texts(r)).toContain(MENSAJES_VALIDACION.correoInvalido);
@@ -110,20 +110,20 @@ describe('Pantalla de inicio de sesión', () => {
   test('un error del servidor muestra un mensaje controlado y vacía la contraseña', async () => {
     login.mockRejectedValue(Object.assign(new Error('SQLSTATE[HY000] detalle interno'), { status: 500 }));
     const r = render(<Login />);
-    escribir(r, 'usuario@hospital.com', 'medico@hospital.com');
-    escribir(r, '••••••••', 'Clave-Segura-1');
+    escribir(r, 'usuario@hospital.mx', 'medico@hospital.com');
+    escribir(r, 'Tu contraseña', 'Clave-Segura-1');
     await pulsar(r);
     expect(login).toHaveBeenCalledWith('medico@hospital.com', 'Clave-Segura-1');
     expect(texts(r)).toContain(MENSAJES_ERROR.servicio);
     expect(texts(r)).not.toContain('SQLSTATE');
-    expect(campo(r, '••••••••').props.value).toBe('');
+    expect(campo(r, 'Tu contraseña').props.value).toBe('');
     act(() => r.unmount());
   });
 
   test('los campos limitan la longitud que se puede escribir', () => {
     const r = render(<Login />);
-    expect(campo(r, 'usuario@hospital.com').props.maxLength).toBe(LIMITES.emailMax);
-    expect(campo(r, '••••••••').props.maxLength).toBe(LIMITES.passwordMax);
+    expect(campo(r, 'usuario@hospital.mx').props.maxLength).toBe(LIMITES.emailMax);
+    expect(campo(r, 'Tu contraseña').props.maxLength).toBe(LIMITES.passwordMax);
     act(() => r.unmount());
   });
 });

@@ -6,7 +6,7 @@ import { activarEmergencia } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { getPositionDetail } from '../services/geolocation';
 import { avisarCambioEmergencias } from '../services/avisosEmergencia';
-import { Ico } from './ui';
+import { Ico, colors, conTema } from './ui';
 
 // Botón flotante de emergencia (visible solo con sesión iniciada)
 export default function EmergencyButton() {
@@ -60,7 +60,7 @@ export default function EmergencyButton() {
       accessibilityLabel="Código de emergencia"
       accessibilityHint="Registra una alerta de emergencia"
       style={({ pressed }) => [
-        styles.btn,
+        estilos().btn,
         { bottom: 24 + insets.bottom, right: 24 + insets.right },
         sending && { opacity: 0.6 },
         pressed && { transform: [{ scale: 0.95 }] },
@@ -71,21 +71,22 @@ export default function EmergencyButton() {
   );
 }
 
-const styles = StyleSheet.create({
+// Rojo de emergencia con borde del color del fondo (se distingue en tema claro y oscuro)
+const estilos = conTema(() => StyleSheet.create({
   btn: {
     position: 'absolute',
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#DC2626',
+    backgroundColor: colors.emergency,
     borderWidth: 3,
-    borderColor: '#FFFFFF',
+    borderColor: colors.emergencyBorder,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: colors.emergency,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
   },
-});
+}));

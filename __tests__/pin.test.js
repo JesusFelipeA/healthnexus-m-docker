@@ -53,8 +53,8 @@ describe('Pantalla de login con PIN', () => {
   const hastaPin = async () => {
     login.mockResolvedValue({ requierePin: true, pinToken: 'ptk' });
     const r = render(<Login />);
-    escribir(r, 'usuario@hospital.com', 'medico@hospital.com');
-    escribir(r, '••••••••', 'Clave-Segura-1');
+    escribir(r, 'usuario@hospital.mx', 'medico@hospital.com');
+    escribir(r, 'Tu contraseña', 'Clave-Segura-1');
     await pulsar(r, 'Iniciar sesión');
     return r;
   };
@@ -103,7 +103,7 @@ describe('Pantalla de login con PIN', () => {
     escribir(r, '••••', '4821');
     await pulsar(r, 'Verificar PIN');
     expect(texts(r)).toContain(MENSAJES_ERROR_PIN.expirado);
-    expect(campo(r, '••••••••').props.value).toBe('');
+    expect(campo(r, 'Tu contraseña').props.value).toBe('');
     act(() => r.unmount());
   });
 
@@ -111,15 +111,15 @@ describe('Pantalla de login con PIN', () => {
     const r = await hastaPin();
     await pulsar(r, 'Usar otra cuenta');
     expect(texts(r)).toContain('Iniciar sesión');
-    expect(campo(r, 'usuario@hospital.com')).toBeTruthy();
+    expect(campo(r, 'usuario@hospital.mx')).toBeTruthy();
     act(() => r.unmount());
   });
 
   test('otros roles entran directo, sin paso de PIN', async () => {
     login.mockResolvedValue({ requierePin: false });
     const r = render(<Login />);
-    escribir(r, 'usuario@hospital.com', 'enfermera@hospital.com');
-    escribir(r, '••••••••', 'Clave-Segura-1');
+    escribir(r, 'usuario@hospital.mx', 'enfermera@hospital.com');
+    escribir(r, 'Tu contraseña', 'Clave-Segura-1');
     await pulsar(r, 'Iniciar sesión');
     expect(texts(r)).not.toContain('Verificación de seguridad');
     act(() => r.unmount());

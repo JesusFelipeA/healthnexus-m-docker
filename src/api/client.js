@@ -11,9 +11,11 @@ export const setUnauthorizedHandler = fn => {
 };
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, code) {
     super(message);
     this.status = status;
+    // Código fijo que manda la API en algunos errores (p. ej. CODIGO_BLOQUEADO, SESION_REVOCADA)
+    if (code) this.code = code;
   }
 }
 
@@ -66,6 +68,7 @@ async function request(method, path, body, extraHeaders = {}) {
     throw new ApiError(
       res.status,
       (data && data.error) || `Error ${res.status}`,
+      data && typeof data.code === 'string' ? data.code : undefined,
     );
   }
   return data;

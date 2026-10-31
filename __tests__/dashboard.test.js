@@ -34,7 +34,7 @@ test('muestra el resumen y el botón de menú, sin la lista de módulos', async 
     );
   });
   const t = JSON.stringify(r.toJSON());
-  expect(t).toContain('Resumen del día');
+  expect(t).toContain('Resumen del turno');
   expect(t).not.toContain('Accesos disponibles para ti');
   const boton = r.root.findAll((n) => n.props.accessibilityLabel === 'Abrir menú' && typeof n.props.onPress === 'function')[0];
   act(() => boton.props.onPress());

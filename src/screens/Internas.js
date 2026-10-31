@@ -225,7 +225,7 @@ export default function Internas() {
                   <Badge
                     text={active ? 'Confirmado' : 'Finalizado'}
                     color={active ? colors.tealDeep : colors.sub}
-                    bg={active ? colors.mint : '#EEF2F2'}
+                    bg={active ? colors.mint : colors.surfaceAlt}
                   />
                 </View>
 

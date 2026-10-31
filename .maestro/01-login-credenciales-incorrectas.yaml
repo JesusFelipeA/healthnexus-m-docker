@@ -9,5 +9,5 @@ tags: [login]
       CORREO: "no-existe-${Date.now()}@healthnexus.test"
       CLAVE: "clave-incorrecta"
 - assertVisible: "Correo o contraseña incorrectos."
-- assertNotVisible: "Resumen del día"
+- assertNotVisible: "Resumen del turno"
 - takeScreenshot: evidencia/01-login-incorrecto

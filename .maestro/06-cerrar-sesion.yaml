@@ -11,7 +11,7 @@ env:
       CORREO: ${CORREO}
       CLAVE: ${CLAVE}
 - extendedWaitUntil:
-    visible: "Resumen del día"
+    visible: "Resumen del turno"
     timeout: 15000
 - tapOn: "Abrir menú"
 - tapOn: "Cerrar sesión"
@@ -20,6 +20,6 @@ env:
     text: "Cerrar sesión"
     rightOf: "Cancelar"       # el botón del diálogo, no el del menú
 - extendedWaitUntil:
-    visible: "Bienvenido de nuevo"
+    visible: "Usa tu cuenta institucional del hospital."
     timeout: 10000
 - takeScreenshot: evidencia/06-sesion-cerrada
