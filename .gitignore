@@ -91,5 +91,5 @@ ambientes.local.json
 android/app/google-services.json
 ios/**/GoogleService-Info.plist
 
-.maestro/evidencia/
-reporte-app.xml
+# Reportes de pruebas generados (npm run test:html)
+/reportes
