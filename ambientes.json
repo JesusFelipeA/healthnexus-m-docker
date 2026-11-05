@@ -1,6 +1,6 @@
 {
-  "_comentario": "URL de la API por ambiente (no son secretos). La de desarrollo de tu PC va en ambientes.local.json, que no se sube a Git.",
-  "dev": { "url": "http://192.168.1.3:3000/api" },
+  "_comentario": "URL de la API por ambiente (no son secretos). En dev, 10.0.2.2 es tu PC vista desde el emulador de Android; para un celular físico pon la IP de tu PC en ambientes.local.json, que no se sube a Git.",
+  "dev": { "url": "http://10.0.2.2:3000/api" },
   "staging": { "url": "https://qa.TU-DOMINIO/api" },
   "prod": { "url": "https://healthnexus.duckdns.org/api" }
 }
