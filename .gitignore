@@ -93,3 +93,8 @@ ios/**/GoogleService-Info.plist
 
 .maestro/evidencia/
 reporte-app.xml
+
+# Registros de fallas de la JVM (Gradle sin memoria) y reportes de pruebas
+hs_err_pid*.log
+replay_pid*.log
+/reportes
