@@ -8,12 +8,19 @@ import { mensajeApi } from '../utils/errors';
 import { Badge, Button, Card, Empty, ErrorBox, Field, Ico, Loading, Paginator, Screen, SectionTitle, SelectField, colors } from '../components/ui';
 import { fmtDateTime } from '../utils/triage';
 
+// T-35.2: la API descuenta del inventario lo que se administra; estos códigos explican por qué no se pudo
+const MENSAJE_POR_CODIGO = {
+  SIN_STOCK: (e) => `${e.message} Avisa a farmacia para que surta el medicamento.`,
+  NO_HOSPITALIZADO: () => 'El paciente no tiene cama asignada. Solo se registran administraciones de pacientes hospitalizados.',
+};
+const FORM_VACIO = { medicamentoId: '', dosis: '', via: '', unidades: '1', observaciones: '', reaccion: false };
+
 export default function Medicacion() {
   const { can } = useAuth();
   const canWrite = can('enfermeria');
   const [pacienteId, setPacienteId] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ medicamentoId: '', dosis: '', via: '', observaciones: '', reaccion: false });
+  const [form, setForm] = useState(FORM_VACIO);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const patients = useFetch(getPatients, []);
@@ -29,15 +36,24 @@ export default function Medicacion() {
     if (!pacienteId) return setError('Selecciona primero el paciente (arriba).');
     if (!form.medicamentoId) return setError('Selecciona el medicamento.');
     if (!form.dosis.trim()) return setError('Escribe la dosis administrada.');
+    if (form.dosis.trim().length > 50) return setError('La dosis no puede superar 50 caracteres.');
+    if (form.via.trim().length > 50) return setError('La vía no puede superar 50 caracteres.');
+    const unidades = Number(form.unidades);
+    if (!/^\d+$/.test(form.unidades.trim()) || unidades < 1 || unidades > 20) return setError('Las unidades a descontar deben ser un número entero de 1 a 20.');
+    if (form.observaciones.trim().length > 1000) return setError('Las observaciones no pueden superar 1000 caracteres.');
     setBusy(true); setError('');
     try {
-      await createAdministracion({
-        pacienteId: Number(pacienteId), medicamentoId: Number(form.medicamentoId), dosis: form.dosis.trim(),
+      const r = await createAdministracion({
+        pacienteId: Number(pacienteId), medicamentoId: Number(form.medicamentoId), dosis: form.dosis.trim(), unidades,
         via: form.via.trim() || undefined, observaciones: form.observaciones.trim() || undefined, reaccionAdversa: form.reaccion,
       });
-      Alert.alert('Listo', 'Administración registrada.');
-      setShowForm(false); setForm({ medicamentoId: '', dosis: '', via: '', observaciones: '', reaccion: false }); list.reload(true);
-    } catch (e) { setError(mensajeApi(e)); } finally { setBusy(false); }
+      const stock = r && typeof r.stockNuevo === 'number' ? ` Quedan ${r.stockNuevo} u. en farmacia.` : '';
+      Alert.alert('Listo', `Administración registrada. Se descontaron ${unidades} u. del inventario.${stock}`);
+      setShowForm(false); setForm(FORM_VACIO); list.reload(true);
+    } catch (e) {
+      const porCodigo = e && Number(e.status) === 409 && MENSAJE_POR_CODIGO[e.code];
+      setError(porCodigo ? porCodigo(e) : mensajeApi(e));
+    } finally { setBusy(false); }
   };
 
   return (
@@ -52,16 +68,18 @@ export default function Medicacion() {
           <ErrorBox message={meds.error} onRetry={meds.reload} />
           {meds.loading && !meds.data ? <Loading /> : (
             <>
-              <SelectField label="Medicamento" icon="medical-outline" value={form.medicamentoId} onChange={(v) => setForm({ ...form, medicamentoId: v })} options={(meds.data || []).map((m) => ({ value: m.id, label: `${m.nombre}${m.concentracion ? ` ${m.concentracion}` : ''}` }))} />
+              <SelectField label="Medicamento" icon="medical-outline" value={form.medicamentoId} onChange={(v) => setForm({ ...form, medicamentoId: v })} options={(meds.data || []).map((m) => ({ value: m.id, label: `${m.nombre}${m.concentracion ? ` ${m.concentracion}` : ''}${typeof m.stock === 'number' ? ` · ${m.stock > 0 ? `${m.stock} u.` : 'sin stock'}` : ''}` }))} />
               <Field label="Dosis" value={form.dosis} onChangeText={(v) => setForm({ ...form, dosis: v })} placeholder="Ej: 500 mg" />
               <Field label="Vía (opcional)" value={form.via} onChangeText={(v) => setForm({ ...form, via: v })} placeholder="Si lo dejas vacío usa la del medicamento" />
+              <Field label="Unidades a descontar" value={form.unidades} onChangeText={(v) => setForm({ ...form, unidades: v.replace(/[^0-9]/g, '') })} keyboardType="number-pad" placeholder="1" />
+              <Text style={{ fontSize: 12, color: colors.sub, marginTop: -8, marginBottom: 16 }}>Se descuentan del inventario de farmacia, del lote que caduca primero.</Text>
               <Field label="Observaciones" value={form.observaciones} onChangeText={(v) => setForm({ ...form, observaciones: v })} placeholder="Opcional" multiline />
               <Pressable onPress={() => setForm({ ...form, reaccion: !form.reaccion })} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                 <Ico name={form.reaccion ? 'checkbox' : 'square-outline'} size={24} color={form.reaccion ? colors.danger : colors.sub} />
                 <Text style={{ color: colors.text, fontWeight: '600' }}>Hubo reacción adversa</Text>
               </Pressable>
               <Button title="Guardar" icon="save-outline" onPress={save} loading={busy} />
-              <Button title="Cancelar" variant="outline" color={colors.coral} onPress={() => { setShowForm(false); setError(''); }} style={{ marginTop: 10 }} />
+              <Button title="Cancelar" variant="outline" color={colors.coral} onPress={() => { setShowForm(false); setForm(FORM_VACIO); setError(''); }} style={{ marginTop: 10 }} />
             </>
           )}
         </Card>
