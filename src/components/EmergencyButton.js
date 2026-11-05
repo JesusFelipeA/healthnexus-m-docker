@@ -20,10 +20,11 @@ export default function EmergencyButton() {
     setSending(true);
     try {
       // La ubicación es opcional: si tarda más de 3 s, se envía sin ella.
+      let espera;
       const { pos } = await Promise.race([
         getPositionDetail({ timeout: 3000 }),
-        new Promise((r) => setTimeout(() => r({ pos: null }), 3500)),
-      ]);
+        new Promise((r) => { espera = setTimeout(() => r({ pos: null }), 3500); }),
+      ]).finally(() => clearTimeout(espera));
       const r = await activarEmergencia('Código de emergencia activado desde la app móvil', pos || undefined);
       avisarCambioEmergencias();
       Alert.alert('🚨 Emergencia', `Código de emergencia registrado.${r && r.id ? `\nNo. de registro: ${r.id}` : ''}`);

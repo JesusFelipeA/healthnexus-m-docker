@@ -91,5 +91,10 @@ ambientes.local.json
 android/app/google-services.json
 ios/**/GoogleService-Info.plist
 
-# Reportes de pruebas generados (npm run test:html)
+.maestro/evidencia/
+reporte-app.xml
+
+# Registros de fallas de la JVM (Gradle sin memoria) y reportes de pruebas
+hs_err_pid*.log
+replay_pid*.log
 /reportes
