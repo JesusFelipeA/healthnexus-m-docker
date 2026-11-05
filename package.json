@@ -1,6 +1,6 @@
 {
   "name": "healthnexus-app",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "private": true,
   "scripts": {
     "android": "node scripts/set-env.js --si-falta dev && react-native run-android",
