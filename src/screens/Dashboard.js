@@ -17,7 +17,7 @@ import { fechaCorta, horaMinutos, iniciales, primerNombre, saludo } from '../uti
 const ROL = { administrador: 'Administrador', medico: 'Médico', enfermeria: 'Enfermería', farmacia: 'Farmacia' };
 
 // Orden de preferencia de los accesos rápidos: se muestran los 4 primeros que el rol puede abrir
-const PREFERIDOS = ['Patients', 'Triage', 'SignosVitales', 'Medicacion', 'Existencias', 'Movimientos', 'Medicamentos', 'AlertasFarmacia', 'Cuentas', 'Auditoria'];
+const PREFERIDOS = ['Patients', 'Triage', 'SignosVitales', 'Medicacion', 'Recetas', 'Existencias', 'Movimientos', 'Medicamentos', 'AlertasFarmacia', 'Cuentas', 'Auditoria'];
 
 export function accesosRapidos(can) {
   return PREFERIDOS.map((id) => MODULOS.find((m) => m.id === id)).filter((m) => m && can(...m.roles)).slice(0, 4);
