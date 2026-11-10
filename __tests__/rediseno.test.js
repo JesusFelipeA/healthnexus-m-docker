@@ -104,7 +104,7 @@ describe('Inicio', () => {
   });
   test('los accesos rápidos dependen del rol (máximo 4)', () => {
     expect(accesosRapidos(canPara('enfermeria')).map((m) => m.id)).toEqual(['Patients', 'Triage', 'SignosVitales', 'Medicacion']);
-    expect(accesosRapidos(canPara('farmacia')).map((m) => m.id)).toEqual(['Existencias', 'Movimientos', 'Medicamentos', 'AlertasFarmacia']);
+    expect(accesosRapidos(canPara('farmacia')).map((m) => m.id)).toEqual(['Recetas', 'Existencias', 'Movimientos', 'Medicamentos']);
     expect(accesosRapidos(canPara('medico')).length).toBe(4);
   });
   test('si la API falla se avisa "Sin actualizar" en lugar de "En línea"', async () => {

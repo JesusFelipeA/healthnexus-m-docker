@@ -31,6 +31,8 @@ import Medicamentos from './src/screens/Medicamentos';
 import Existencias from './src/screens/Existencias';
 import Movimientos from './src/screens/Movimientos';
 import AlertasFarmacia from './src/screens/AlertasFarmacia';
+import Recetas from './src/screens/Recetas';
+import RecetaDetalle from './src/screens/RecetaDetalle';
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
@@ -78,6 +80,8 @@ function Routes() {
             <>
               <Stack.Screen name="Medicamentos" component={Medicamentos} />
               <Stack.Screen name="AlertasFarmacia" component={AlertasFarmacia} />
+              <Stack.Screen name="Recetas" component={Recetas} />
+              <Stack.Screen name="RecetaDetalle" component={RecetaDetalle} />
             </>
           )}
           {can() && (
