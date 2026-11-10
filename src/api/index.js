@@ -89,6 +89,16 @@ export const getMovimientos = params =>
 export const createMovimiento = data =>
   http.post('/farmacia/movimientos', data);
 export const getAlertasFarmacia = () => http.get('/farmacia/alertas');
+// Dispensación de recetas (consultas finalizadas con medicamentos o receta libre)
+export const getRecetasResumen = () => http.get('/farmacia/recetas/resumen');
+export const getRecetas = params => http.get(`/farmacia/recetas${qs(params)}`);
+export const getReceta = id => http.get(`/farmacia/recetas/${id}`);
+// data: { notas?, unidades?: { [medicamentoId]: n } }
+export const dispensarReceta = (id, data) =>
+  http.post(`/farmacia/recetas/${id}/dispensar`, data);
+// Solo administrador: devuelve el inventario y la receta vuelve a quedar pendiente
+export const revertirDispensacion = id =>
+  http.post(`/farmacia/recetas/${id}/revertir`, {});
 
 // Enfermería
 export const getSignos = pacienteId =>

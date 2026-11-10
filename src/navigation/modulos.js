@@ -21,6 +21,7 @@ export const MODULOS = [
   { id: 'Externas', title: 'Derivaciones externas', desc: 'Traslados y referencias', icon: 'globe-outline', iconActivo: 'globe', seccion: 'derivaciones', roles: ['medico'] },
   { id: 'Hospitals', title: 'Hospitales', desc: 'Cercanos y camas', icon: 'location-outline', iconActivo: 'location', seccion: 'derivaciones', roles: ['medico', 'enfermeria'] },
 
+  { id: 'Recetas', title: 'Recetas', desc: 'Dispensación de recetas', icon: 'document-text-outline', iconActivo: 'document-text', seccion: 'farmacia', roles: ['farmacia'] },
   { id: 'Medicamentos', title: 'Medicamentos', desc: 'Catálogo y stock', icon: 'medical-outline', iconActivo: 'medical', seccion: 'farmacia', roles: ['farmacia'] },
   { id: 'Existencias', title: 'Existencias', desc: 'Lotes y caducidad', icon: 'cube-outline', iconActivo: 'cube', seccion: 'farmacia', roles: ['farmacia', 'enfermeria', 'medico'] },
   { id: 'Movimientos', title: 'Movimientos', desc: 'Entradas, salidas y ajustes', icon: 'swap-vertical-outline', iconActivo: 'swap-vertical', seccion: 'farmacia', roles: ['farmacia', 'enfermeria'] },
