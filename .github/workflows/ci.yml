@@ -1,4 +1,4 @@
-﻿name: CI MÃ³vil
+﻿name: CI Móvil
 on:
   push:
     branches: [main, development]
@@ -40,11 +40,11 @@ jobs:
       - uses: android-actions/setup-android@v3
       - run: npm ci --ignore-scripts
       - run: node scripts/set-env.js dev
-      - name: Restaurar configuraciÃ³n de Firebase
+      - name: Restaurar configuración de Firebase
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
-      - name: Compilar APK de depuraciÃ³n
+      - name: Compilar APK de depuración
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
