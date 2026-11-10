@@ -1,0 +1,53 @@
+﻿name: CI MÃ³vil
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+permissions:
+  contents: read
+jobs:
+  calidad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node scripts/set-env.js dev
+      - run: npm run lint
+      - run: npx jest --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-movil
+          path: coverage/lcov-report
+  apk:
+    needs: calidad
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - run: npm ci --ignore-scripts
+      - run: node scripts/set-env.js dev
+      - name: Restaurar configuraciÃ³n de Firebase
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+      - name: Compilar APK de depuraciÃ³n
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: android/app/build/outputs/apk/debug/*.apk
