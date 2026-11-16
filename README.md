@@ -167,6 +167,13 @@ Sin ese archivo la app compila y funciona igual, solo que sin notificaciones. La
 ## Pruebas
 `npm test` (utilidades, emergencias, derivaciones, cuentas, recibos, tema claro/oscuro, recuperar contraseña y las pantallas rediseñadas). Pruebas de extremo a extremo con Maestro en `.maestro/` (ver su README).
 
+| Comando | Qué genera |
+|---|---|
+| `npm test` | Pruebas unitarias y de pantallas (Jest) en la consola |
+| `npm run test:coverage` | Lo mismo, con cobertura en `coverage/` |
+| `npm run test:junit` | Lo mismo, con reporte **JUnit** (XML) en `reportes/junit-app.xml`: un `<testsuite>` por archivo de `__tests__`. Lo leen Jenkins (`junit 'reportes/*.xml'`), GitHub Actions y cualquier visor de JUnit. En el CI se guarda como artefacto `junit-movil` |
+| `maestro test .maestro ... --format junit --output reporte-app.xml` | Pruebas de extremo a extremo en el celular, también en formato JUnit (ver `.maestro/README.md`) |
+
 ## Pendiente
 - Escaneo de paciente con la cámara.
 - Dispensación de recetas (farmacia) y descuento de inventario al administrar medicación.

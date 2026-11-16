@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { Alert, Text, View } from 'react-native';
 
@@ -28,6 +28,16 @@ import {
 import { fmtDateTime } from '../utils/triage';
 import { esAnormal, rangoNormal, revisarSignos, tendencia } from '../utils/signosVitales';
 import { mensajeApi } from '../utils/errors';
+import {
+  colaDe,
+  descartar,
+  encolarSignos,
+  esSinConexion,
+  guardarPacientes,
+  pacientesGuardados,
+  sincronizarSignos,
+  suscribir,
+} from '../services/offline';
 
 const EMPTY = {
   temperatura: '',
@@ -45,6 +55,33 @@ const EMPTY = {
 const toNum = v => (v.trim() === '' ? undefined : Number(v.replace(',', '.')));
 
 const SEXO = { hombre: 'Hombre', mujer: 'Mujer', otro: 'Otro' };
+
+// Hora local del teléfono en el formato que usa fmtDateTime ("AAAA-MM-DD HH:MM")
+const p2 = (n) => String(n).padStart(2, '0');
+const horaLocal = (iso) => {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+};
+
+// Un registro de la cola sin conexión con la misma forma que los que devuelve la API
+const deLaCola = (i) => ({
+  id: i.clientUuid,
+  pacienteId: i.body.pacienteId,
+  paciente: i.pacienteNombre,
+  temperatura: i.body.temperatura,
+  presion: i.body.presionArterial,
+  fc: i.body.frecuenciaCardiaca,
+  fr: i.body.frecuenciaRespiratoria,
+  spo2: i.body.saturacionOxigeno,
+  glucosa: i.body.glucosa,
+  peso: i.body.peso,
+  talla: i.body.talla,
+  dolor: i.body.escalaDolor,
+  notas: i.body.notas,
+  fecha: horaLocal(i.capturadoEn),
+  pendiente: true,
+  error: i.error,
+});
 
 // Mosaicos de la última toma: valor grande, flecha si está fuera del rango normal y el rango como referencia
 const MOSAICOS = [
@@ -108,8 +145,9 @@ function EncabezadoPaciente({ paciente }) {
 }
 
 export default function SignosVitales() {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const canWrite = can('enfermeria');
+  const userId = user && user.id !== undefined ? user.id : null;
 
   const [pacienteId, setPacienteId] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -117,11 +155,61 @@ export default function SignosVitales() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
+  const [sinConexion, setSinConexion] = useState(false);
+  const [cola, setCola] = useState([]);
+  const [enviando, setEnviando] = useState(false);
 
-  const patients = useFetch(getPatients, []);
-  const list = useFetch(() => getSignos(pacienteId), [pacienteId]);
+  // Sin conexión, el selector usa la última lista de pacientes guardada en el teléfono (12 h)
+  const patients = useFetch(async () => {
+    try {
+      const lista = await getPatients();
+      if (userId !== null && canWrite) guardarPacientes(userId, lista);
+      return lista;
+    } catch (e) {
+      if (esSinConexion(e) && userId !== null) {
+        const guardados = await pacientesGuardados(userId);
+        if (guardados) {
+          setSinConexion(true);
+          return guardados.lista;
+        }
+      }
+      throw e;
+    }
+  }, []);
+  const list = useFetch(async () => {
+    try {
+      const r = await getSignos(pacienteId);
+      setSinConexion(false);
+      return r;
+    } catch (e) {
+      if (esSinConexion(e)) {
+        setSinConexion(true);
+        return [];
+      }
+      throw e;
+    }
+  }, [pacienteId]);
+  const recargarLista = list.reload;
 
-  const records = list.data || [];
+  // Cola de signos capturados sin conexión (se actualiza cuando el sincronizador envía algo)
+  const recargarCola = useCallback(async () => {
+    if (userId !== null) setCola(await colaDe(userId));
+  }, [userId]);
+  useEffect(() => {
+    recargarCola();
+    return suscribir(() => {
+      recargarCola();
+      recargarLista(true);
+    });
+  }, [recargarCola, recargarLista]);
+
+  const pendientes = cola.filter((i) => i.estado === 'pendiente');
+  const rechazados = cola.filter((i) => i.estado === 'error');
+  const enCola = cola
+    .filter((i) => !pacienteId || String(i.body.pacienteId) === String(pacienteId))
+    .map(deLaCola)
+    .reverse();
+  const records = [...enCola, ...(list.data || [])];
   const seleccionado = (patients.data || []).find((p) => String(p.id) === String(pacienteId));
   const ultima = pacienteId ? records[0] : null;
 
@@ -189,11 +277,47 @@ export default function SignosVitales() {
       setF(EMPTY);
       list.reload(true);
     } catch (e) {
-      setError(mensajeApi(e));
+      if (esSinConexion(e) && userId !== null) {
+        // Sin conexión o con el servidor apagado: se guarda cifrado en el teléfono y se envía al reconectar
+        await encolarSignos(userId, body, seleccionado ? seleccionado.name : '');
+        setSinConexion(true);
+        setAviso('Sin conexión: se guardó en el teléfono y se enviará al reconectar');
+        setShowForm(false);
+        setF(EMPTY);
+      } else {
+        setError(mensajeApi(e));
+      }
     } finally {
       setBusy(false);
     }
   };
+
+  const enviarAhora = async () => {
+    setEnviando(true);
+    try {
+      const r = await sincronizarSignos(userId, createSignos);
+      if (r.enviados) {
+        setSinConexion(false);
+        setAviso(`${r.enviados === 1 ? '1 registro enviado' : `${r.enviados} registros enviados`}`);
+        list.reload(true);
+      } else if (r.sinConexion) {
+        setAviso('Sigue sin conexión. Se volverá a intentar solo.');
+      }
+    } finally {
+      setEnviando(false);
+      recargarCola();
+    }
+  };
+
+  const confirmarDescarte = (item) =>
+    Alert.alert(
+      'Descartar registro',
+      `El servidor no aceptó este registro de ${item.pacienteNombre || 'un paciente'}. Si lo descartas, se borra del teléfono.`,
+      [
+        { text: 'Conservar', style: 'cancel' },
+        { text: 'Descartar', style: 'destructive', onPress: () => descartar(userId, item.clientUuid).then(recargarCola) },
+      ],
+    );
 
   // Los valores fuera del rango normal se resaltan en rojo
   const chip = (label, value, unit = '', clave = null) => {
@@ -273,6 +397,35 @@ export default function SignosVitales() {
           style={{ marginBottom: 24 }}
         />
       ) : null}
+
+      {sinConexion || pendientes.length > 0 ? (
+        <Card style={{ backgroundColor: colors.warningTint, gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Ico name={sinConexion ? 'cloud-offline-outline' : 'cloud-upload-outline'} size={18} color={colors.warning} />
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.warning }}>
+              {sinConexion ? 'Sin conexión' : 'Pendientes de enviar'}
+            </Text>
+          </View>
+          <Text style={{ fontSize: 13, color: colors.text }}>
+            {pendientes.length === 0
+              ? 'Puedes registrar signos vitales: se guardan cifrados en el teléfono y se envían al reconectar.'
+              : `${pendientes.length === 1 ? '1 registro guardado' : `${pendientes.length} registros guardados`} en el teléfono, pendiente${pendientes.length === 1 ? '' : 's'} de enviar.`}
+          </Text>
+          {pendientes.length > 0 ? (
+            <Button title="Enviar ahora" icon="cloud-upload-outline" variant="soft" onPress={enviarAhora} loading={enviando} />
+          ) : null}
+        </Card>
+      ) : null}
+
+      {rechazados.map((item) => (
+        <Card key={item.clientUuid} style={{ backgroundColor: colors.dangerTint, gap: 6 }}>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.dangerText }}>
+            No se pudo enviar: {item.pacienteNombre || 'registro sin conexión'}
+          </Text>
+          <Text style={{ fontSize: 13, color: colors.dangerText }}>{item.error}</Text>
+          <Button title="Descartar" variant="outline" color={colors.danger} onPress={() => confirmarDescarte(item)} />
+        </Card>
+      ))}
 
       <ErrorBox message={error || list.error} onRetry={list.reload} />
 
@@ -436,6 +589,13 @@ export default function SignosVitales() {
                   {fmtDateTime(s.fecha)}
                   {s.registradoPor ? ` · ${s.registradoPor}` : ''}
                 </Text>
+                {s.pendiente ? (
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: s.error ? colors.dangerText : colors.warning }}>
+                    · {s.error ? 'No enviado' : 'Pendiente de enviar'}
+                  </Text>
+                ) : s.sinConexion ? (
+                  <Text style={{ fontSize: 11, color: colors.faint }}>· Capturado sin conexión</Text>
+                ) : null}
               </View>
 
               <View

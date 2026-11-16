@@ -15,6 +15,7 @@ import {
   saveToken,
 } from '../services/secureStorage';
 import { detenerPush } from '../services/push';
+import { cerrarSesionOffline, esSinConexion, guardarUsuario, usuarioGuardado } from '../services/offline';
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -29,6 +30,7 @@ export function AuthProvider({ children }) {
     setAuthToken(null);
     setUser(null);
     await clearToken();
+    await cerrarSesionOffline();
   }, []);
 
   // Al abrir la app: recupera la sesión guardada
@@ -39,9 +41,16 @@ export function AuthProvider({ children }) {
       if (token) {
         setAuthToken(token);
         try {
-          setUser(await api.me());
-        } catch {
-          await logout();
+          const yo = await api.me();
+          setUser(yo);
+          guardarUsuario(yo);
+        } catch (e) {
+          // Sin conexión (o con el servidor caído) la sesión sigue abierta con los datos guardados en el teléfono,
+          // para poder capturar signos vitales. Si el token ya no vale (401), se cierra como siempre.
+          const sinServidor = esSinConexion(e) || Number(e && e.status) >= 500;
+          const guardado = sinServidor ? await usuarioGuardado() : null;
+          if (guardado) setUser({ ...guardado, sinConexion: true });
+          else await logout();
         }
       }
       setLoading(false);
@@ -52,6 +61,7 @@ export function AuthProvider({ children }) {
     setAuthToken(res.token);
     await saveToken(res.token);
     setUser(res.user);
+    await guardarUsuario(res.user);
   }, []);
 
   // Devuelve { requierePin: true, pinToken } cuando la cuenta es de médico:
