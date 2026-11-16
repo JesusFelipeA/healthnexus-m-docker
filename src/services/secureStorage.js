@@ -51,3 +51,23 @@ export async function getDeviceFingerprint() {
 
   return fingerprint;
 }
+
+// Modo sin conexión: la sesión, la lista de pacientes y la cola de signos pendientes se guardan
+// cifrados en el Keystore (mismas reglas que el token: solo este equipo, con el teléfono desbloqueado).
+const OFFLINE_SERVICE = 'healthnexus.offline';
+
+export async function leerOffline() {
+  try {
+    const c = await Keychain.getGenericPassword({ service: OFFLINE_SERVICE });
+    return c && c.password ? JSON.parse(c.password) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function guardarOffline(datos) {
+  await Keychain.setGenericPassword('offline', JSON.stringify(datos), {
+    service: OFFLINE_SERVICE,
+    accessible: SOLO_ESTE_EQUIPO(),
+  });
+}

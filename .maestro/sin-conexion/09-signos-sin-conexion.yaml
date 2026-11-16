@@ -1,0 +1,67 @@
+# Modo sin conexión · fase 1
+# Enfermería registra signos vitales en modo avión y, al reconectar, se envían solos sin duplicarse.
+#
+# Va en su propia carpeta porque necesita condiciones que los flujos 01-08 no piden:
+#  - La app debe llegar a la API por wifi o internet (APK de staging/prod, o la IP de tu PC en
+#    ambientes.local.json). Con `adb reverse` la conexión pasa por el cable USB y el modo avión no la corta.
+#  - Maestro 1.39 o superior en Android (comando setAirplaneMode).
+#  - PACIENTE: nombre (o parte del nombre) de un paciente que vea qa.enfermeria.
+#
+# maestro test .maestro/sin-conexion -e CLAVE="Qa-Hospital-2026!" -e PACIENTE="Laura"
+appId: com.healthnexusapp
+name: 09 Enfermería · Signos vitales sin conexión
+tags: [sin-conexion]
+env:
+  CORREO: qa.enfermeria@healthnexus.test
+---
+- setAirplaneMode: disabled
+- runFlow:
+    file: ../subflujos/iniciar-sesion.yaml
+    env:
+      CORREO: ${CORREO}
+      CLAVE: ${CLAVE}
+- extendedWaitUntil:
+    visible: "Resumen del turno"
+    timeout: 15000
+- tapOn: "Abrir menú"
+- tapOn: "Signos vitales"
+# Con conexión: la pantalla guarda la lista de pacientes cifrada en el teléfono (12 h)
+- extendedWaitUntil:
+    visible: "Registrar signos vitales"
+    timeout: 15000
+
+# ===== Sin conexión =====
+- setAirplaneMode: enabled
+- tapOn: "Paciente: Todos los pacientes"
+- tapOn: ".*${PACIENTE}.*"
+- tapOn: "Registrar signos vitales"
+- tapOn: "36.5"              # Temp. (°C): valores normales para que no salga el aviso de fuera de rango
+- inputText: "36.8"
+- tapOn: "80"                # FC (lpm)
+- inputText: "84"
+- hideKeyboard
+- scrollUntilVisible:
+    element: "Guardar"
+- tapOn: "Guardar"
+- extendedWaitUntil:
+    visible: "Sin conexión: se guardó en el teléfono y se enviará al reconectar"
+    timeout: 15000
+- assertVisible: "Sin conexión"
+- assertVisible: ".*Pendiente de enviar"
+- takeScreenshot: evidencia/09-guardado-sin-conexion
+
+# ===== Vuelve la conexión =====
+- setAirplaneMode: disabled
+# La app reintenta sola cada 30 s; "Enviar ahora" solo adelanta el envío (si ya se fue, no aparece)
+- extendedWaitUntil:
+    visible: "Enviar ahora"
+    timeout: 5000
+    optional: true
+- tapOn:
+    text: "Enviar ahora"
+    optional: true
+- extendedWaitUntil:
+    visible: ".*Capturado sin conexión"
+    timeout: 60000
+- assertNotVisible: ".*Pendiente de enviar"
+- takeScreenshot: evidencia/09-enviado-al-reconectar

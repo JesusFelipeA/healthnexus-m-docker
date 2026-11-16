@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, StatusBar, View } from 'react-native';
+import { ActivityIndicator, AppState, StatusBar, View } from 'react-native';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -9,6 +9,8 @@ import { MenuProvider } from './src/navigation/MenuLateral';
 import { colors } from './src/components/ui';
 import { TemaProvider, useTema } from './src/theme/TemaContext';
 import { iniciarPush } from './src/services/push';
+import { colaDe, sincronizarSignos } from './src/services/offline';
+import { createSignos } from './src/api';
 import Login from './src/screens/Login';
 import RecuperarCorreo from './src/screens/recuperar/RecuperarCorreo';
 import RecuperarCodigo from './src/screens/recuperar/RecuperarCodigo';
@@ -110,6 +112,25 @@ function NotificacionesPush() {
   return null;
 }
 
+// Modo sin conexión: envía los signos vitales pendientes al abrir la app, al volver a ella y cada 30 s mientras haya pendientes.
+export const CADA_MS_SINCRONIZACION = 30 * 1000;
+export function SincronizadorOffline() {
+  const { user, can } = useAuth();
+  const userId = user && can('enfermeria') ? user.id : null;
+  useEffect(() => {
+    if (!userId) return undefined;
+    const intentar = () => sincronizarSignos(userId, createSignos).catch(() => {});
+    intentar();
+    const sub = AppState.addEventListener('change', (estado) => { if (estado === 'active') intentar(); });
+    const timer = setInterval(async () => {
+      const cola = await colaDe(userId);
+      if (cola.some((i) => i.estado === 'pendiente')) intentar();
+    }, CADA_MS_SINCRONIZACION);
+    return () => { sub.remove(); clearInterval(timer); };
+  }, [userId]);
+  return null;
+}
+
 // Al cambiar de tema se vuelven a montar las pantallas (para que tomen la paleta nueva),
 // conservando la pantalla en la que estaba el usuario.
 function Contenido() {
@@ -134,6 +155,7 @@ function Contenido() {
             <EmergencyButton />
           </React.Fragment>
           <NotificacionesPush />
+          <SincronizadorOffline />
         </MenuProvider>
       </View>
     </>
