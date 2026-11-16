@@ -92,7 +92,9 @@ android/app/google-services.json
 ios/**/GoogleService-Info.plist
 
 .maestro/evidencia/
+.maestro/sin-conexion/evidencia/
 reporte-app.xml
+reporte-sin-conexion.xml
 
 # Registros de fallas de la JVM (Gradle sin memoria) y reportes de pruebas
 hs_err_pid*.log
