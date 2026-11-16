@@ -18,7 +18,15 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: node scripts/set-env.js dev
       - run: npm run lint
-      - run: npx jest --coverage
+      - name: Pruebas con cobertura y reporte JUnit
+        run: npx jest --ci --coverage --config jest.junit.config.js
+      - name: Guardar reporte JUnit
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: junit-movil
+          path: reportes/junit-app.xml
+          if-no-files-found: warn
       - uses: actions/upload-artifact@v5
         with:
           name: cobertura-movil
