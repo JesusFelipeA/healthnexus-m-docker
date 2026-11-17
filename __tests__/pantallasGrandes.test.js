@@ -11,17 +11,27 @@ jest.mock('react-native-vector-icons/Ionicons', () => 'Icon');
 jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: jest.fn(), navigate: jest.fn(), setParams: jest.fn() }) }));
 jest.mock('react-native-keychain', () => ({}));
 jest.mock('../src/context/AuthContext', () => ({ useAuth: jest.fn(() => ({ login: jest.fn(), verificarPin: jest.fn() })) }));
-jest.mock('../src/api', () => ({}));
+jest.mock('../src/api', () => ({
+  getPatients: jest.fn(() => Promise.resolve([])),
+  getStats: jest.fn(() => Promise.resolve({})),
+  getFarmaciaResumen: jest.fn(),
+  getEmergenciasActivas: jest.fn(() => Promise.resolve([])),
+}));
 
 const D = require('../src/utils/disposicion');
-const { Screen } = require('../src/components/ui');
+const api = require('../src/api');
+const { useAuth } = require('../src/context/AuthContext');
+const { Rejilla, Screen } = require('../src/components/ui');
 const Login = require('../src/screens/Login').default;
+const Patients = require('../src/screens/Patients').default;
+const Dashboard = require('../src/screens/Dashboard').default;
 
 const ventana = (width, height) => { mockVentana = { width, height, scale: 2, fontScale: 1 }; };
 const metrics = { frame: { x: 0, y: 0, width: 400, height: 800 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } };
 async function montar(el) {
   let r;
   await act(async () => { r = ReactTestRenderer.create(<SafeAreaProvider initialMetrics={metrics}>{el}</SafeAreaProvider>); });
+  await act(async () => { await new Promise((res) => setTimeout(res, 0)); });
   return r;
 }
 /** Estilo del contenido del primer ScrollView vertical de la pantalla */
@@ -97,5 +107,57 @@ describe('ancho máximo del contenido', () => {
     ventana(1280, 800);
     const r = await montar(<Login />);
     expect(contenido(r)).toMatchObject({ maxWidth: D.ANCHO_TARJETA + 48, alignSelf: 'center' });
+  });
+});
+
+describe('listas en 2 columnas (Rejilla)', () => {
+  const tarjetas = (n) => Array.from({ length: n }, (_, i) => <Text key={`t${i}`}>Tarjeta {i + 1}</Text>);
+  const filas = (r) => r.root.findAll((n) => n.props.testID === 'rejilla-fila' && typeof n.type !== 'string');
+
+  test('en celular no agrega nada: las tarjetas quedan una debajo de otra', async () => {
+    const r = await montar(<Screen title="Lista" amplio><Rejilla>{tarjetas(3)}</Rejilla></Screen>);
+    expect(filas(r)).toHaveLength(0);
+    expect(r.root.findAllByType(Text).filter((t) => String(t.props.children[0]).startsWith('Tarjeta'))).toHaveLength(3);
+  });
+
+  test('en tablet acomoda las tarjetas de 2 en 2 y la última fila guarda el ancho de columna', async () => {
+    ventana(800, 1280);
+    const r = await montar(<Screen title="Lista" amplio><Rejilla>{tarjetas(3)}</Rejilla></Screen>);
+    const f = filas(r);
+    expect(f).toHaveLength(2);
+    expect(f[0].props.children[0]).toHaveLength(2);
+    expect(f[1].props.children[0]).toHaveLength(1);
+    expect(f[1].props.children[1]).toHaveLength(1); // hueco para que la tarjeta no se estire
+  });
+
+  test('en una pantalla sin "amplio" (formulario) sigue en 1 columna aunque sea tablet', async () => {
+    ventana(800, 1280);
+    const r = await montar(<Screen title="Formulario"><Rejilla>{tarjetas(4)}</Rejilla></Screen>);
+    expect(filas(r)).toHaveLength(0);
+  });
+
+  test('Pacientes en tablet: lista en 2 columnas', async () => {
+    ventana(800, 1280);
+    api.getPatients.mockResolvedValue([
+      { id: 1, name: 'Ana López', age: 30, sexo: 'mujer', triageLevel: 'verde' },
+      { id: 2, name: 'Beto Ruiz', age: 41, sexo: 'hombre', triageLevel: 'rojo' },
+    ]);
+    const r = await montar(<Patients navigation={{ navigate: jest.fn(), setParams: jest.fn() }} route={{ params: {} }} />);
+    expect(contenido(r).maxWidth).toBe(1100);
+    expect(filas(r)).toHaveLength(1);
+    expect(JSON.stringify(r.toJSON())).toContain('Beto Ruiz');
+  });
+
+  test('Inicio en tablet: los 4 accesos rápidos van en una sola fila', async () => {
+    useAuth.mockReturnValue({ user: { nombre: 'Ana López', rol: 'administrador' }, can: () => true });
+    const accesos = (r) => r.root.findAll((n) => n.props.accessibilityRole === 'button' && typeof n.props.style === 'function' && n.props.accessibilityLabel !== 'Abrir menú');
+    const base = (r) => StyleSheet.flatten(accesos(r)[0].props.style({ pressed: false }));
+
+    const celular = await montar(<Dashboard />);
+    expect(base(celular).flexBasis).toBe('45%');
+
+    ventana(1280, 800);
+    const tablet = await montar(<Dashboard />);
+    expect(base(tablet).flexBasis).toBe('22%');
   });
 });

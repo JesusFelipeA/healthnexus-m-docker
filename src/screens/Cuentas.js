@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getCuentas } from '../api';
-import { Badge, Button, Card, Empty, ErrorBox, Field, Ico, Loading, Screen, colors } from '../components/ui';
+import { Badge, Button, Card, Empty, ErrorBox, Field, Ico, Loading, Rejilla, Screen, colors } from '../components/ui';
 import { ESTADO_CUENTA, fmtMoney } from '../utils/dinero';
 import { mensajeApi } from '../utils/errors';
 
@@ -57,7 +57,7 @@ export default function Cuentas() {
   }, [query, filtro, page, intento]);
 
   return (
-    <Screen title="Cuentas" icon="wallet-outline" iconColor={colors.teal}>
+    <Screen amplio title="Cuentas" icon="wallet-outline" iconColor={colors.teal}>
       <Card accent={colors.teal} style={{ padding: 16 }}>
         <Text style={{ fontSize: 12, color: colors.sub, fontWeight: '600' }}>Saldo pendiente (según el filtro)</Text>
         <Text style={{ fontSize: 26, fontWeight: '800', color: saldoPendiente > 0 ? colors.warning : colors.success }} accessibilityLabel={`Saldo pendiente ${fmtMoney(saldoPendiente)}`}>
@@ -80,7 +80,7 @@ export default function Cuentas() {
       </View>
 
       <ErrorBox message={error} onRetry={() => { setPage(1); setIntento((n) => n + 1); }} />
-      {loading && rows.length === 0 ? <Loading /> : !error && rows.length === 0 ? <Empty icon="wallet-outline" text="No hay cuentas para mostrar." /> : rows.map((c) => (
+      {loading && rows.length === 0 ? <Loading /> : !error && rows.length === 0 ? <Empty icon="wallet-outline" text="No hay cuentas para mostrar." /> : <Rejilla>{rows.map((c) => (
         <Pressable key={c.id} onPress={() => nav.navigate('CuentaDetalle', { id: c.id })} accessibilityRole="button" accessibilityLabel={`Cuenta ${c.folio} de ${c.paciente}`}>
           <Card accent={c.saldo > 0 ? colors.warning : colors.success} style={{ padding: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -99,7 +99,7 @@ export default function Cuentas() {
             </View>
           </Card>
         </Pressable>
-      ))}
+      ))}</Rejilla>}
       {rows.length < total ? <Button variant="soft" title={loading ? 'Cargando...' : `Cargar más (${rows.length} de ${total})`} disabled={loading} onPress={() => setPage(page + 1)} /> : null}
     </Screen>
   );

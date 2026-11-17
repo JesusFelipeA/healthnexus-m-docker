@@ -7,8 +7,8 @@ import { RUTAS_DE_MENU } from '../navigation/modulos';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, conTema, insigniaTriage } from '../theme/paletas';
 import { triageInfo } from '../utils/triage';
-import { estiloCentrado } from '../utils/disposicion';
-import useDisposicion, { DisposicionContext } from '../hooks/useDisposicion';
+import { SEPARACION, enFilas, estiloCentrado } from '../utils/disposicion';
+import useDisposicion, { DisposicionContext, useDisposicionActual } from '../hooks/useDisposicion';
 export { default as Paginator } from './Paginator';
 
 // `colors` es la paleta del tema actual (claro u oscuro): ver src/theme/paletas.js
@@ -71,6 +71,28 @@ export function BotonMenu({ color = colors.text, style }) {
     <Pressable onPress={menu.abrir} hitSlop={12} style={style} accessibilityRole="button" accessibilityLabel="Abrir menú">
       <Ico name="menu-outline" size={24} color={color} />
     </Pressable>
+  );
+}
+
+/**
+ * Lista de tarjetas en 1 o 2 columnas según el ancho disponible. En celular devuelve los hijos
+ * tal cual (nada cambia); en tablet u horizontal, dentro de un <Screen amplio>, los acomoda en filas.
+ */
+export function Rejilla({ children }) {
+  const s = estilos();
+  const disp = useDisposicionActual();
+  const items = React.Children.toArray(children).filter(Boolean);
+  if (disp.columnas <= 1) return <>{items}</>;
+  return (
+    <View>
+      {enFilas(items, disp.columnas).map((fila, i) => (
+        <View key={`fila-${i}`} style={s.rejillaFila} testID="rejilla-fila">
+          {fila.map((el) => <View key={el.key} style={s.rejillaCelda}>{el}</View>)}
+          {/* La última fila incompleta conserva el ancho de columna */}
+          {Array.from({ length: disp.columnas - fila.length }, (_, j) => <View key={`hueco-${j}`} style={s.rejillaCelda} />)}
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -311,6 +333,8 @@ const estilos = conTema((c) => StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: c.text, letterSpacing: -0.2 },
   headerSub: { fontSize: 12, color: c.sub, marginTop: 1 },
   content: { padding: 20, paddingBottom: 120 },
+  rejillaFila: { flexDirection: 'row', gap: SEPARACION },
+  rejillaCelda: { flex: 1, minWidth: 0 },
   card: { backgroundColor: c.surface, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: c.line },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, alignSelf: 'flex-start' },
   badgeText: { fontSize: 12, fontWeight: '700' },

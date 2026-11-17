@@ -2,7 +2,7 @@ import { mensajeApi } from '../utils/errors';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { getMedicamentos } from '../api';
-import { Badge, Button, Card, Empty, ErrorBox, Field, Loading, Screen, colors } from '../components/ui';
+import { Badge, Button, Card, Empty, ErrorBox, Field, Loading, Rejilla, Screen, colors } from '../components/ui';
 
 const FILTERS = [['', 'Todos'], ['bajo', 'Stock bajo'], ['sin_stock', 'Sin stock']];
 const ESTADO = {
@@ -35,7 +35,7 @@ export default function Medicamentos() {
   }, [query, estado, page]);
 
   return (
-    <Screen title="Medicamentos" icon="medical-outline" iconColor={colors.teal}>
+    <Screen amplio title="Medicamentos" icon="medical-outline" iconColor={colors.teal}>
       <Field value={q} onChangeText={setQ} placeholder="Buscar por nombre, sustancia o código..." autoCapitalize="none" style={{}} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20, flexGrow: 0 }}>
         {FILTERS.map(([id, label]) => (
@@ -45,7 +45,7 @@ export default function Medicamentos() {
         ))}
       </ScrollView>
       <ErrorBox message={error} />
-      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="medical-outline" text="No se encontraron medicamentos." /> : rows.map((m) => {
+      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="medical-outline" text="No se encontraron medicamentos." /> : <Rejilla>{rows.map((m) => {
         const e = ESTADO[m.estado] || ESTADO.ok;
         const pct = Math.max(0, Math.min(100, m.stockMaximo ? (m.stock / m.stockMaximo) * 100 : 100));
         return (
@@ -71,7 +71,7 @@ export default function Medicamentos() {
             </View>
           </Card>
         );
-      })}
+      })}</Rejilla>}
       {rows.length < total ? <Button variant="soft" title={loading ? 'Cargando...' : `Cargar más (${rows.length} de ${total})`} disabled={loading} onPress={() => setPage(page + 1)} /> : null}
     </Screen>
   );

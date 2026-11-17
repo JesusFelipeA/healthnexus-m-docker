@@ -13,7 +13,8 @@ import { useMenu } from '../navigation/menuContext';
 import { MODULOS } from '../navigation/modulos';
 import { insigniaTriage } from '../theme/paletas';
 import { fechaCorta, horaMinutos, iniciales, primerNombre, saludo } from '../utils/fecha';
-import { ANCHO_LECTURA, estiloCentrado } from '../utils/disposicion';
+import { estiloCentrado } from '../utils/disposicion';
+import useDisposicion from '../hooks/useDisposicion';
 
 const ROL = { administrador: 'Administrador', medico: 'Médico', enfermeria: 'Enfermería', farmacia: 'Farmacia' };
 
@@ -44,6 +45,8 @@ export default function Dashboard() {
   const menu = useMenu();
   const navigation = Navegacion.useNavigation();
   const isFarmacia = user?.rol === 'farmacia';
+  // En tablet u horizontal el inicio usa más ancho y los accesos rápidos van en una sola fila
+  const disp = useDisposicion({ amplio: true });
 
   const { data, error, reload } = useFetch(() => (isFarmacia ? getFarmaciaResumen() : getStats()), []);
   const [actualizado, setActualizado] = useState(null);
@@ -85,7 +88,7 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <ScrollView
-        contentContainerStyle={[s.scroll, estiloCentrado(ANCHO_LECTURA)]}
+        contentContainerStyle={[s.scroll, estiloCentrado(disp.anchoMaximo)]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={refrescar} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />}
       >
@@ -157,7 +160,7 @@ export default function Dashboard() {
                 <Pressable
                   key={m.id}
                   onPress={() => abrir(m.id)}
-                  style={({ pressed }) => [s.acceso, pressed && { opacity: 0.85 }]}
+                  style={({ pressed }) => [s.acceso, disp.columnas > 1 && s.accesoAncho, pressed && { opacity: 0.85 }]}
                   accessibilityRole="button"
                   accessibilityLabel={m.title}
                 >
@@ -210,6 +213,7 @@ const estilos = conTema((c) => StyleSheet.create({
   mosaicoNota: { fontSize: 12, color: c.faint },
   accesos: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   acceso: { flexGrow: 1, flexBasis: '45%', height: 64, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: 14, paddingHorizontal: 12 },
+  accesoAncho: { flexBasis: '22%' },
   accesoIcono: { width: 40, height: 40, borderRadius: 12, backgroundColor: c.mint, alignItems: 'center', justifyContent: 'center' },
   accesoTexto: { flex: 1, fontSize: 14, fontWeight: '600', color: c.text },
 }));
