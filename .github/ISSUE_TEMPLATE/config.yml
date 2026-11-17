@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar una vulnerabilidad de seguridad
+    url: https://github.com/JesusFelipeA/healthnexus-m-docker/security/advisories/new
+    about: No publiques fallas de seguridad en un issue; repórtalas de forma privada aquí.
+  - name: Problemas de la API (healthnexus-api)
+    url: https://github.com/JesusFelipeA/health_nexus_api_integradora/issues
+    about: Si el error viene del servidor (respuestas 500, datos incorrectos), repórtalo en el repositorio de la API.

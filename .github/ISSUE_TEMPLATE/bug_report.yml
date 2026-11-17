@@ -1,0 +1,90 @@
+name: Reporte de error
+description: Algo no funciona como debería en la app móvil.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por reportarlo. **No incluyas datos reales de pacientes, contraseñas ni tokens.**
+        Si es un problema de seguridad, no lo publiques aquí: sigue la [Política de seguridad](https://github.com/JesusFelipeA/healthnexus-m-docker/security/policy).
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: ¿Qué pasó?
+      description: Describe el error y qué esperabas que ocurriera.
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: |
+        1. Inicia sesión como enfermería
+        2. Ve a Signos vitales
+        3. Toca "Guardar" sin conexión
+        4. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: pantalla
+    attributes:
+      label: Pantalla
+      options:
+        - Inicio de sesión / Recuperar contraseña
+        - Inicio (Dashboard)
+        - Triage
+        - Pacientes
+        - Derivaciones internas
+        - Derivaciones externas
+        - Hospitales
+        - Seguimiento
+        - Signos vitales
+        - Medicación
+        - Medicamentos / Existencias / Movimientos
+        - Alertas de farmacia
+        - Auditoría
+        - Cuentas y recibos
+        - Botón de emergencia
+        - Otra
+    validations:
+      required: true
+  - type: dropdown
+    id: rol
+    attributes:
+      label: Rol con el que ocurre
+      multiple: true
+      options:
+        - Médico
+        - Enfermería
+        - Farmacia
+        - Administrador
+  - type: dropdown
+    id: ambiente
+    attributes:
+      label: Ambiente
+      options:
+        - dev
+        - staging
+        - prod
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión de la app
+      description: Aparece en la pantalla de inicio de sesión.
+      placeholder: "1.1.1"
+    validations:
+      required: true
+  - type: input
+    id: dispositivo
+    attributes:
+      label: Dispositivo y versión de Android
+      placeholder: "Pixel 7, Android 15 / Emulador API 35"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Registros o capturas
+      description: Salida de Metro o de `adb logcat`, y capturas de pantalla.
+      render: shell
