@@ -7,7 +7,7 @@ import { RUTAS_DE_MENU } from '../navigation/modulos';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, conTema, insigniaTriage } from '../theme/paletas';
 import { triageInfo } from '../utils/triage';
-import { SEPARACION, enFilas, estiloCentrado } from '../utils/disposicion';
+import { LETRA_COMPACTA, SEPARACION, enFilas, estiloCentrado } from '../utils/disposicion';
 import useDisposicion, { DisposicionContext, useDisposicionActual } from '../hooks/useDisposicion';
 export { default as Paginator } from './Paginator';
 
@@ -45,8 +45,8 @@ export function Screen({ title, subtitle, icon, iconColor = colors.teal, childre
         )}
         {icon ? <Ico name={icon} size={20} color={iconColor} /> : null}
         <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1}>{title}</Text>
-          {subtitle ? <Text style={s.headerSub} numberOfLines={1}>{subtitle}</Text> : null}
+          <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
+          {subtitle ? <Text style={s.headerSub} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{subtitle}</Text> : null}
         </View>
         {right || null}
       </View>
@@ -101,7 +101,7 @@ export const Card = ({ children, accent, style }) => (
 );
 
 export const Badge = ({ text, color, bg }) => (
-  <View style={[estilos().badge, { backgroundColor: bg || `${color}26` }]}><Text style={[estilos().badgeText, { color }]}>{text}</Text></View>
+  <View style={[estilos().badge, { backgroundColor: bg || `${color}26` }]}><Text style={[estilos().badgeText, { color }]} maxFontSizeMultiplier={LETRA_COMPACTA}>{text}</Text></View>
 );
 
 const ROMANO = { rojo: 'I', naranja: 'II', amarillo: 'III', verde: 'IV', azul: 'V' };
@@ -115,7 +115,7 @@ export function TriageBadge({ nivel, compacto = false }) {
   return (
     <View style={[s.triage, { backgroundColor: ins.bg }]} accessible accessibilityLabel={ROMANO[nivel] ? `Triage nivel ${ROMANO[nivel]}, ${info.label}` : 'Sin triage'}>
       <View style={[s.triageDot, { backgroundColor: ins.dot }]} />
-      <Text style={[s.triageText, { color: ins.text }]} numberOfLines={1}>{compacto ? (ROMANO[nivel] || '—') : texto}</Text>
+      <Text style={[s.triageText, { color: ins.text }]} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{compacto ? (ROMANO[nivel] || '—') : texto}</Text>
     </View>
   );
 }
@@ -132,7 +132,7 @@ export function Chip({ label, active, onPress, dot, style }) {
       style={({ pressed }) => [s.chip, active && s.chipActivo, pressed && { opacity: 0.85 }, style]}
     >
       {dot ? <View style={[s.triageDot, { backgroundColor: dot }]} /> : null}
-      <Text style={[s.chipTexto, active && s.chipTextoActivo]}>{label}</Text>
+      <Text style={[s.chipTexto, active && s.chipTextoActivo]} maxFontSizeMultiplier={LETRA_COMPACTA}>{label}</Text>
     </Pressable>
   );
 }
@@ -154,7 +154,7 @@ export function Segmented({ opciones, valor, onChange, etiqueta }) {
             style={[s.segmento, activo && s.segmentoActivo]}
           >
             {o.icono ? <Ico name={o.icono} size={16} color={activo ? colors.tealDeep : colors.sub} /> : null}
-            <Text style={[s.segmentoTexto, activo && s.segmentoTextoActivo]}>{o.nombre}</Text>
+            <Text style={[s.segmentoTexto, activo && s.segmentoTextoActivo]} maxFontSizeMultiplier={LETRA_COMPACTA}>{o.nombre}</Text>
           </Pressable>
         );
       })}
@@ -319,7 +319,7 @@ export function Button({ title, icon, onPress, variant = 'primary', color = colo
       {loading ? <ActivityIndicator color={textColor} /> : (
         <>
           {icon ? <Ico name={icon} size={variant === 'soft' ? 18 : 20} color={disabled && variant === 'primary' ? colors.faint : textColor} /> : null}
-          <Text style={{ color: disabled && variant === 'primary' ? colors.faint : textColor, fontWeight: '700', fontSize: variant === 'soft' ? 14 : 16 }}>{title}</Text>
+          <Text style={{ color: disabled && variant === 'primary' ? colors.faint : textColor, fontWeight: '700', fontSize: variant === 'soft' ? 14 : 16, flexShrink: 1, textAlign: 'center' }} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -341,12 +341,12 @@ const estilos = conTema((c) => StyleSheet.create({
   triage: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, alignSelf: 'flex-start' },
   triageDot: { width: 8, height: 8, borderRadius: 4 },
   triageText: { fontSize: 12, fontWeight: '700' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, marginRight: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingVertical: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, marginRight: 8 },
   chipActivo: { backgroundColor: c.mint, borderColor: c.teal },
   chipTexto: { fontSize: 13, fontWeight: '600', color: c.sub },
   chipTextoActivo: { color: c.tealDeep, fontWeight: '700' },
   segmentado: { flexDirection: 'row', backgroundColor: c.surfaceAlt, borderRadius: 12, padding: 4, gap: 4 },
-  segmento: { flex: 1, flexDirection: 'row', gap: 6, height: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  segmento: { flex: 1, flexDirection: 'row', gap: 6, minHeight: 40, paddingVertical: 6, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   segmentoActivo: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
   segmentoTexto: { fontSize: 13, fontWeight: '600', color: c.sub },
   segmentoTextoActivo: { color: c.tealDeep, fontWeight: '700' },
@@ -368,8 +368,8 @@ const estilos = conTema((c) => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: c.overlay, justifyContent: 'center', padding: 24 },
   sheet: { backgroundColor: c.surface, borderRadius: 18, maxHeight: '70%', overflow: 'hidden' },
   option: { paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: c.line },
-  btnPrimary: { height: 52, borderRadius: 12, backgroundColor: c.teal, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  btnPrimary: { minHeight: 52, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.teal, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnDeshabilitado: { backgroundColor: c.surfaceAlt },
-  btnOutline: { height: 52, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  btnOutline: { minHeight: 52, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnSoft: { marginTop: 12, minHeight: 44, paddingVertical: 10, borderRadius: 12, backgroundColor: c.mint, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 }));

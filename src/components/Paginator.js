@@ -319,7 +319,7 @@ const s = StyleSheet.create({
 
   pageButton: {
     minWidth: 36,
-    height: 36,
+    minHeight: 36,
     paddingHorizontal: 10,
     borderRadius: 12,
     borderWidth: 1,

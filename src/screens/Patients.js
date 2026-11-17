@@ -13,7 +13,7 @@ function Dato({ k, v }) {
   if (v === null || v === undefined || v === '') return null;
   return (
     <View style={{ flexDirection: 'row', paddingVertical: 5 }}>
-      <Text style={{ width: 130, fontSize: 12, color: colors.faint }}>{k}</Text>
+      <Text style={{ width: '38%', maxWidth: 160, paddingRight: 8, fontSize: 12, color: colors.faint }}>{k}</Text>
       <Text style={{ flex: 1, fontSize: 13, color: colors.text, fontWeight: '600' }}>{String(v)}</Text>
     </View>
   );

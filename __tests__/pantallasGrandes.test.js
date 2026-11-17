@@ -21,7 +21,7 @@ jest.mock('../src/api', () => ({
 const D = require('../src/utils/disposicion');
 const api = require('../src/api');
 const { useAuth } = require('../src/context/AuthContext');
-const { Rejilla, Screen } = require('../src/components/ui');
+const { Badge, Button, Chip, Field, Rejilla, Screen, TriageBadge } = require('../src/components/ui');
 const Login = require('../src/screens/Login').default;
 const Patients = require('../src/screens/Patients').default;
 const Dashboard = require('../src/screens/Dashboard').default;
@@ -159,5 +159,40 @@ describe('listas en 2 columnas (Rejilla)', () => {
     ventana(1280, 800);
     const tablet = await montar(<Dashboard />);
     expect(base(tablet).flexBasis).toBe('22%');
+  });
+});
+
+describe('letra grande del sistema (Ajustes > Accesibilidad > Tamaño de fuente)', () => {
+  const textos = (r) => r.root.findAllByType(Text);
+  const conTexto = (r, t) => textos(r).find((n) => [].concat(n.props.children).join('') === t);
+
+  test('chips, insignias, botones y el título del encabezado crecen como máximo 1.4×', async () => {
+    const r = await montar(
+      <Screen title="Pacientes" subtitle="12 pacientes">
+        <Chip label="Rojo" active onPress={() => {}} />
+        <Badge text="Pendiente" color="#B45309" />
+        <TriageBadge nivel="rojo" />
+        <Button title="Guardar" onPress={() => {}} />
+      </Screen>,
+    );
+    for (const t of ['Pacientes', '12 pacientes', 'Rojo', 'Pendiente', 'I · Crítico', 'Guardar']) {
+      expect(conTexto(r, t)).toBeTruthy();
+      expect(conTexto(r, t).props.maxFontSizeMultiplier).toBe(D.LETRA_COMPACTA);
+    }
+  });
+
+  test('el texto normal (etiquetas, contenido) crece sin límite', async () => {
+    const r = await montar(<Screen title="Alta"><Field label="Nombre completo" value="" onChangeText={() => {}} /><Text>Notas del turno</Text></Screen>);
+    expect(conTexto(r, 'Nombre completo').props.maxFontSizeMultiplier).toBeUndefined();
+    expect(conTexto(r, 'Notas del turno').props.maxFontSizeMultiplier).toBeUndefined();
+  });
+
+  test('chips y botones usan altura mínima: con letra grande crecen en vez de cortar el texto', async () => {
+    const r = await montar(<Screen title="X"><Chip label="Verde" onPress={() => {}} /><Button title="Enviar" onPress={() => {}} /></Screen>);
+    const estilo = (label) => StyleSheet.flatten(r.root.findAll((n) => n.props.accessibilityLabel === label && typeof n.props.style === 'function')[0].props.style({ pressed: false }));
+    for (const label of ['Verde', 'Enviar']) {
+      expect(estilo(label).height).toBeUndefined();
+      expect(estilo(label).minHeight).toBeGreaterThanOrEqual(36);
+    }
   });
 });

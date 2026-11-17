@@ -13,7 +13,7 @@ import { useMenu } from '../navigation/menuContext';
 import { MODULOS } from '../navigation/modulos';
 import { insigniaTriage } from '../theme/paletas';
 import { fechaCorta, horaMinutos, iniciales, primerNombre, saludo } from '../utils/fecha';
-import { estiloCentrado } from '../utils/disposicion';
+import { LETRA_COMPACTA, estiloCentrado } from '../utils/disposicion';
 import useDisposicion from '../hooks/useDisposicion';
 
 const ROL = { administrador: 'Administrador', medico: 'Médico', enfermeria: 'Enfermería', farmacia: 'Farmacia' };
@@ -33,7 +33,7 @@ function Mosaico({ etiqueta, valor, nota, punto }) {
         {punto ? <View style={[s.punto, { backgroundColor: punto }]} /> : null}
         <Text style={s.mosaicoEtiqueta} numberOfLines={1}>{etiqueta}</Text>
       </View>
-      <Text style={s.mosaicoValor}>{valor}</Text>
+      <Text style={s.mosaicoValor} maxFontSizeMultiplier={LETRA_COMPACTA}>{valor}</Text>
       {nota ? <Text style={s.mosaicoNota} numberOfLines={1}>{nota}</Text> : null}
     </View>
   );
@@ -97,7 +97,7 @@ export default function Dashboard() {
           <BotonMenu style={s.cuadro} />
           <View style={s.marca}>
             <Image source={require('../img/simbolo-healthnexus.png')} style={s.simbolo} resizeMode="contain" />
-            <Text style={s.marcaTexto}>Health<Text style={s.marcaAcento}>Nexus</Text></Text>
+            <Text style={s.marcaTexto} maxFontSizeMultiplier={LETRA_COMPACTA}>Health<Text style={s.marcaAcento}>Nexus</Text></Text>
           </View>
           <Pressable
             style={s.perfil}
@@ -105,7 +105,7 @@ export default function Dashboard() {
             accessibilityRole="button"
             accessibilityLabel={`Perfil de ${user?.nombre || 'usuario'}`}
           >
-            <Text style={s.perfilTexto}>{iniciales(user?.nombre)}</Text>
+            <Text style={s.perfilTexto} maxFontSizeMultiplier={1.2}>{iniciales(user?.nombre)}</Text>
           </Pressable>
         </View>
 
@@ -144,7 +144,7 @@ export default function Dashboard() {
           <View style={s.total} accessible accessibilityLabel={`${total.etiqueta}: ${total.valor}`}>
             <View style={s.totalIcono}><Ico name={total.icono} size={20} color={colors.teal} /></View>
             <Text style={s.totalEtiqueta}>{total.etiqueta}</Text>
-            <Text style={s.totalValor}>{total.valor}</Text>
+            <Text style={s.totalValor} maxFontSizeMultiplier={LETRA_COMPACTA}>{total.valor}</Text>
           </View>
           <View style={s.mosaicos}>
             {mosaicos.map((m) => <Mosaico key={m.etiqueta} {...m} />)}
@@ -180,7 +180,7 @@ const estilos = conTema((c) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: c.bg },
   // paddingBottom deja libre el botón de emergencia flotante
   scroll: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 120, gap: 22 },
-  topBar: { flexDirection: 'row', alignItems: 'center', gap: 12, height: 52 },
+  topBar: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 },
   cuadro: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
   marca: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   simbolo: { width: 30, height: 29 },
@@ -212,7 +212,7 @@ const estilos = conTema((c) => StyleSheet.create({
   mosaicoValor: { fontSize: 26, fontWeight: '700', color: c.text, fontVariant: ['tabular-nums'] },
   mosaicoNota: { fontSize: 12, color: c.faint },
   accesos: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  acceso: { flexGrow: 1, flexBasis: '45%', height: 64, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: 14, paddingHorizontal: 12 },
+  acceso: { flexGrow: 1, flexBasis: '45%', minHeight: 64, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: c.surface, borderWidth: 1, borderColor: c.line, borderRadius: 14, paddingHorizontal: 12 },
   accesoAncho: { flexBasis: '22%' },
   accesoIcono: { width: 40, height: 40, borderRadius: 12, backgroundColor: c.mint, alignItems: 'center', justifyContent: 'center' },
   accesoTexto: { flex: 1, fontSize: 14, fontWeight: '600', color: c.text },
