@@ -1,0 +1,42 @@
+name: Solicitud de función
+description: Propón una mejora o una función nueva.
+title: "[Función]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problema
+    attributes:
+      label: ¿Qué problema resuelve?
+      description: Describe la situación del personal del hospital que motiva la propuesta.
+      placeholder: "Cuando enfermería registra signos vitales en el turno nocturno..."
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Propuesta
+      description: Cómo debería funcionar. Puedes agregar bocetos o capturas.
+    validations:
+      required: true
+  - type: dropdown
+    id: roles
+    attributes:
+      label: Roles que la usarían
+      multiple: true
+      options:
+        - Médico
+        - Enfermería
+        - Farmacia
+        - Administrador
+  - type: checkboxes
+    id: alcance
+    attributes:
+      label: Alcance
+      options:
+        - label: Requiere un endpoint nuevo o cambios en la API
+        - label: Requiere cambios nativos (permisos o librerías nuevas)
+        - label: Es solo un cambio visual
+  - type: textarea
+    id: alternativas
+    attributes:
+      label: Alternativas consideradas
