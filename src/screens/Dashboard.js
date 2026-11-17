@@ -13,6 +13,7 @@ import { useMenu } from '../navigation/menuContext';
 import { MODULOS } from '../navigation/modulos';
 import { insigniaTriage } from '../theme/paletas';
 import { fechaCorta, horaMinutos, iniciales, primerNombre, saludo } from '../utils/fecha';
+import { ANCHO_LECTURA, estiloCentrado } from '../utils/disposicion';
 
 const ROL = { administrador: 'Administrador', medico: 'Médico', enfermeria: 'Enfermería', farmacia: 'Farmacia' };
 
@@ -84,7 +85,7 @@ export default function Dashboard() {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       <ScrollView
-        contentContainerStyle={s.scroll}
+        contentContainerStyle={[s.scroll, estiloCentrado(ANCHO_LECTURA)]}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refrescando} onRefresh={refrescar} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />}
       >

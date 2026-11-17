@@ -7,6 +7,8 @@ import { RUTAS_DE_MENU } from '../navigation/modulos';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, conTema, insigniaTriage } from '../theme/paletas';
 import { triageInfo } from '../utils/triage';
+import { estiloCentrado } from '../utils/disposicion';
+import useDisposicion, { DisposicionContext } from '../hooks/useDisposicion';
 export { default as Paginator } from './Paginator';
 
 // `colors` es la paleta del tema actual (claro u oscuro): ver src/theme/paletas.js
@@ -22,8 +24,11 @@ const useRutaActual = typeof Navegacion.useRoute === 'function' ? Navegacion.use
 // Pantalla con encabezado y contenido con scroll.
 // En las pantallas que se abren desde la barra lateral, el encabezado muestra el botón de menú;
 // en las demás (detalle, alta) muestra "Volver". `onRefresh` activa "deslizar para actualizar".
-export function Screen({ title, subtitle, icon, iconColor = colors.teal, children, refreshing = false, onRefresh, right }) {
+// En pantallas grandes el contenido se centra con un ancho máximo: 720 dp para formularios y
+// detalles, o 1100 dp con `amplio` (listas que usan <Rejilla> para ir a 2 columnas).
+export function Screen({ title, subtitle, icon, iconColor = colors.teal, children, refreshing = false, onRefresh, right, amplio = false }) {
   const s = estilos();
+  const disp = useDisposicion({ amplio });
   const nav = Navegacion.useNavigation();
   const route = useRutaActual();
   const menu = useMenu();
@@ -46,13 +51,13 @@ export function Screen({ title, subtitle, icon, iconColor = colors.teal, childre
         {right || null}
       </View>
       <ScrollView
-        contentContainerStyle={s.content}
+        contentContainerStyle={[s.content, estiloCentrado(disp.anchoMaximo)]}
         keyboardShouldPersistTaps="handled"
         refreshControl={onRefresh ? (
           <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />
         ) : undefined}
       >
-        {children}
+        <DisposicionContext.Provider value={disp}>{children}</DisposicionContext.Provider>
       </ScrollView>
     </SafeAreaView>
   );
