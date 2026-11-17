@@ -1,6 +1,6 @@
 // Pantallas de cualquier tamaño: celular, tablet, horizontal y pantalla dividida.
 import React from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text } from 'react-native';
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -23,6 +23,7 @@ const api = require('../src/api');
 const { useAuth } = require('../src/context/AuthContext');
 const { Badge, Button, Chip, Field, Rejilla, Screen, TriageBadge } = require('../src/components/ui');
 const Login = require('../src/screens/Login').default;
+const { Paso } = require('../src/screens/recuperar/Paso');
 const Patients = require('../src/screens/Patients').default;
 const Dashboard = require('../src/screens/Dashboard').default;
 
@@ -194,5 +195,26 @@ describe('letra grande del sistema (Ajustes > Accesibilidad > Tamaño de fuente)
       expect(estilo(label).height).toBeUndefined();
       expect(estilo(label).minHeight).toBeGreaterThanOrEqual(36);
     }
+  });
+});
+
+describe('el teclado no tapa los formularios', () => {
+  const comportamiento = (r) => r.root.findAllByType(KeyboardAvoidingView).map((k) => k.props.behavior);
+
+  test('toda pantalla con Screen deja espacio al teclado (también en Android, que dibuja de borde a borde)', async () => {
+    const r = await montar(<Screen title="Alta"><Field label="Nombre" value="" onChangeText={() => {}} /></Screen>);
+    expect(comportamiento(r)).toEqual(['padding']);
+  });
+
+  test('inicio de sesión y recuperar contraseña también (antes solo en iOS)', async () => {
+    const login = await montar(<Login />);
+    expect(comportamiento(login)).toEqual(['padding']);
+    const paso = await montar(<Paso paso={1} titulo="Recupera tu acceso"><Text>campo</Text></Paso>);
+    expect(comportamiento(paso)).toEqual(['padding']);
+  });
+
+  test('tocar un botón con el teclado abierto funciona al primer toque', async () => {
+    const r = await montar(<Screen title="Alta"><Text>x</Text></Screen>);
+    expect(r.root.findAll((n) => n.props.contentContainerStyle && !n.props.horizontal)[0].props.keyboardShouldPersistTaps).toBe('handled');
   });
 });

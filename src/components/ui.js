@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, KeyboardAvoidingView, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Navegacion from '@react-navigation/native';
 import { useMenu } from '../navigation/menuContext';
@@ -18,6 +18,12 @@ export const shadow = { shadowColor: '#111A3A', shadowOpacity: 0.06, shadowRadiu
 
 export const Ico = ({ name, size = 20, color = colors.text, style }) => <Icon name={name} size={size} color={color} style={style} />;
 
+/**
+ * Cómo deja espacio al teclado. Con la app de borde a borde (Android 15+ y edgeToEdgeEnabled),
+ * `adjustResize` ya no achica la ventana: en ambas plataformas se agrega padding abajo.
+ */
+export const COMPORTAMIENTO_TECLADO = 'padding';
+
 // useRoute puede no existir en los mocks de las pruebas
 const useRutaActual = typeof Navegacion.useRoute === 'function' ? Navegacion.useRoute : () => null;
 
@@ -34,32 +40,36 @@ export function Screen({ title, subtitle, icon, iconColor = colors.teal, childre
   const menu = useMenu();
   const conMenu = !!menu && !!route && RUTAS_DE_MENU.has(route.name);
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
-      <View style={s.header}>
-        {conMenu ? (
-          <BotonMenu style={s.back} />
-        ) : (
-          <Pressable onPress={() => nav.goBack()} hitSlop={12} style={s.back} accessibilityRole="button" accessibilityLabel="Volver">
-            <Ico name="chevron-back" size={22} />
-          </Pressable>
-        )}
-        {icon ? <Ico name={icon} size={20} color={iconColor} /> : null}
-        <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
-          {subtitle ? <Text style={s.headerSub} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{subtitle}</Text> : null}
+    // La app dibuja de borde a borde (edgeToEdgeEnabled): Android ya no achica la ventana al abrir
+    // el teclado, así que el espacio lo deja KeyboardAvoidingView y el campo enfocado queda visible.
+    <KeyboardAvoidingView style={s.screen} behavior={COMPORTAMIENTO_TECLADO}>
+      <SafeAreaView style={s.screen} edges={['top']}>
+        <View style={s.header}>
+          {conMenu ? (
+            <BotonMenu style={s.back} />
+          ) : (
+            <Pressable onPress={() => nav.goBack()} hitSlop={12} style={s.back} accessibilityRole="button" accessibilityLabel="Volver">
+              <Ico name="chevron-back" size={22} />
+            </Pressable>
+          )}
+          {icon ? <Ico name={icon} size={20} color={iconColor} /> : null}
+          <View style={{ flex: 1 }}>
+            <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
+            {subtitle ? <Text style={s.headerSub} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{subtitle}</Text> : null}
+          </View>
+          {right || null}
         </View>
-        {right || null}
-      </View>
-      <ScrollView
-        contentContainerStyle={[s.content, estiloCentrado(disp.anchoMaximo)]}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={onRefresh ? (
-          <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />
-        ) : undefined}
-      >
-        <DisposicionContext.Provider value={disp}>{children}</DisposicionContext.Provider>
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView
+          contentContainerStyle={[s.content, estiloCentrado(disp.anchoMaximo)]}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={onRefresh ? (
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />
+          ) : undefined}
+        >
+          <DisposicionContext.Provider value={disp}>{children}</DisposicionContext.Provider>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
