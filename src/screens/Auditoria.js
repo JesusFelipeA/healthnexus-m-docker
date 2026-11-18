@@ -2,7 +2,7 @@ import { mensajeApi } from '../utils/errors';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { getAuditoria } from '../api';
-import { Badge, Button, Card, Empty, ErrorBox, Field, Ico, Loading, Screen, colors } from '../components/ui';
+import { Badge, Button, Card, Empty, ErrorBox, Field, Ico, Loading, Rejilla, Screen, colors } from '../components/ui';
 import { fmtDateTime } from '../utils/triage';
 
 export default function Auditoria() {
@@ -35,7 +35,7 @@ export default function Auditoria() {
   }, [query, desde, hasta, onlyCritical, page]);
 
   return (
-    <Screen title="Auditoría" icon="clipboard-outline" iconColor={colors.amber}>
+    <Screen amplio title="Auditoría" icon="clipboard-outline" iconColor={colors.amber}>
       <Field value={q} onChangeText={setQ} placeholder="Buscar usuario o acción..." autoCapitalize="none" style={{ marginBottom: 0 }} />
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1 }}><Field value={desde} onChangeText={setDesde} placeholder="Desde AAAA-MM-DD" keyboardType="numbers-and-punctuation" /></View>
@@ -46,7 +46,7 @@ export default function Auditoria() {
       </Pressable>
 
       <ErrorBox message={error} />
-      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="clipboard-outline" text="No hay registros para mostrar." /> : rows.map((l) => {
+      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="clipboard-outline" text="No hay registros para mostrar." /> : <Rejilla>{rows.map((l) => {
         const crit = !!Number(l.critica);
         return (
           <Card key={l.id} accent={crit ? colors.danger : colors.line} style={{ padding: 16 }}>
@@ -64,7 +64,7 @@ export default function Auditoria() {
             </View>
           </Card>
         );
-      })}
+      })}</Rejilla>}
       {rows.length < total ? <Button variant="soft" title={loading ? 'Cargando...' : `Cargar más (${rows.length} de ${total})`} disabled={loading} onPress={() => setPage(page + 1)} /> : null}
     </Screen>
   );

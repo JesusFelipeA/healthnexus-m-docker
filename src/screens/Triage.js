@@ -9,6 +9,7 @@ import {
   ErrorBox,
   Field,
   Loading,
+  Rejilla,
   Screen,
   colors,
 } from '../components/ui';
@@ -113,7 +114,7 @@ export default function Triage() {
   };
 
   return (
-    <Screen title="Triage" icon="medkit-outline">
+    <Screen amplio title="Triage" icon="medkit-outline">
       <Text style={{ fontSize: 13, color: colors.sub, marginBottom: 16 }}>
         Toca un paciente, escribe el motivo y el diagnóstico presuntivo y elige
         su nivel de triage. Si no tiene una admisión activa, se crea al
@@ -161,7 +162,7 @@ export default function Triage() {
       ) : list.length === 0 ? (
         <Empty icon="medkit-outline" text="No hay pacientes para mostrar." />
       ) : (
-        list.map(p => {
+        <Rejilla>{list.map(p => {
           const t = triageInfo(p.triageLevel);
           return (
             <Card key={p.id} accent={t.color} style={{ padding: 16 }}>
@@ -287,7 +288,7 @@ export default function Triage() {
               )}
             </Card>
           );
-        })
+        })}</Rejilla>
       )}
     </Screen>
   );

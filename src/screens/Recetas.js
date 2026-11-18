@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getRecetas, getRecetasResumen } from '../api';
-import { Badge, Button, Card, Chip, Empty, ErrorBox, Field, Ico, Loading, Screen, colors } from '../components/ui';
+import { Badge, Button, Card, Chip, Empty, ErrorBox, Field, Ico, Loading, Rejilla, Screen, colors } from '../components/ui';
 import { mensajeApi } from '../utils/errors';
 import { fmtDateTime } from '../utils/triage';
 
@@ -75,7 +75,7 @@ export default function Recetas() {
   const cambiarFiltro = (id) => { setFiltro(id); setPage(1); setRows([]); };
 
   return (
-    <Screen title="Recetas" icon="document-text-outline" iconColor={colors.teal}>
+    <Screen amplio title="Recetas" icon="document-text-outline" iconColor={colors.teal}>
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
         <Contador etiqueta="Pendientes" valor={resumen ? resumen.pendientes : '—'} color={colors.warning} />
         <Contador etiqueta="Hoy" valor={resumen ? resumen.dispensadasHoy : '—'} color={colors.success} />
@@ -90,7 +90,7 @@ export default function Recetas() {
       <ErrorBox message={error} onRetry={() => { setPage(1); setIntento((n) => n + 1); }} />
       {loading && rows.length === 0 ? <Loading /> : !error && rows.length === 0 ? (
         <Empty icon="document-text-outline" text={filtro === 'pendientes' ? 'No hay recetas por dispensar.' : 'No hay recetas para mostrar.'} />
-      ) : rows.map((r) => (
+      ) : <Rejilla>{rows.map((r) => (
         <Pressable key={r.id} onPress={() => nav.navigate('RecetaDetalle', { id: r.id })} accessibilityRole="button" accessibilityLabel={`Receta ${r.id} de ${r.paciente}`}>
           <Card accent={r.dispensada ? colors.success : colors.warning} style={{ padding: 16 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -110,7 +110,7 @@ export default function Recetas() {
             </View>
           </Card>
         </Pressable>
-      ))}
+      ))}</Rejilla>}
       {rows.length < total ? <Button variant="soft" title={loading ? 'Cargando...' : `Cargar más (${rows.length} de ${total})`} disabled={loading} onPress={() => setPage(page + 1)} /> : null}
     </Screen>
   );

@@ -133,7 +133,7 @@ const estilos = conTema((c) => StyleSheet.create({
   mensaje: { fontSize: 15, fontWeight: '700', color: c.text },
   detalle: { fontSize: 13, color: c.sub, marginTop: 4 },
   acciones: { flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 10 },
-  btn: { flex: 1, height: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12 },
+  btn: { flex: 1, minHeight: 44, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 12 },
   btnPrimario: { backgroundColor: c.emergency },
   btnSecundario: { borderWidth: 1.5, borderColor: c.emergencyLine, backgroundColor: c.modo === 'oscuro' ? 'transparent' : c.surface },
   sinUbicacionCaja: { borderWidth: 1, borderColor: c.emergencyLine, borderStyle: 'dashed' },

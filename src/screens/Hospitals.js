@@ -5,7 +5,7 @@ import { getHospitals, getPatients, reservarCama } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useFetch from '../hooks/useFetch';
 import { MENSAJES_GPS, getPositionDetail } from '../services/geolocation';
-import { Button, Card, Empty, ErrorBox, Ico, Loading, Screen, SelectField, colors } from '../components/ui';
+import { Button, Card, Empty, ErrorBox, Ico, Loading, Rejilla, Screen, SelectField, colors } from '../components/ui';
 
 export default function Hospitals() {
   const { can } = useAuth();
@@ -49,13 +49,13 @@ export default function Hospitals() {
   );
 
   return (
-    <Screen title="Hospitales Cercanos" icon="location-outline" iconColor={colors.coral}>
+    <Screen amplio title="Hospitales Cercanos" icon="location-outline" iconColor={colors.coral}>
       {canRefer && (
         <SelectField label="Paciente a derivar" icon="person-outline" value={pacienteId} onChange={setPacienteId} options={(patients.data || []).map((p) => ({ value: p.id, label: p.name }))} />
       )}
       {gpsMotivo ? <ErrorBox message={MENSAJES_GPS[gpsMotivo]} onRetry={hospitals.reload} /> : null}
       <ErrorBox message={error || hospitals.error} onRetry={hospitals.reload} />
-      {hospitals.loading && !hospitals.data ? <Loading text="Buscando hospitales..." /> : list.length === 0 ? <Empty icon="location-outline" text="No hay hospitales registrados." /> : list.map((h) => {
+      {hospitals.loading && !hospitals.data ? <Loading text="Buscando hospitales..." /> : list.length === 0 ? <Empty icon="location-outline" text="No hay hospitales registrados." /> : <Rejilla>{list.map((h) => {
         const ok = h.camasDisponibles > 0;
         return (
           <Card key={h.id} accent={ok ? colors.green : colors.red}>
@@ -77,7 +77,7 @@ export default function Hospitals() {
             ) : null}
           </Card>
         );
-      })}
+      })}</Rejilla>}
 
       <Modal visible={!!ticket} transparent animationType="fade" onRequestClose={() => setTicket(null)}>
         <View style={{ flex: 1, backgroundColor: colors.overlay, justifyContent: 'center', padding: 24 }}>

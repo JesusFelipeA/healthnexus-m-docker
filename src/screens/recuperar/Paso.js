@@ -1,9 +1,10 @@
 // Marco común de los 3 pasos de "Recuperar contraseña": volver, "Paso N de 3", barra de avance,
 // ícono, título y descripción. El contenido de cada paso va como hijos.
 import React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ico, colors, conTema } from '../../components/ui';
+import { COMPORTAMIENTO_TECLADO, Ico, colors, conTema } from '../../components/ui';
+import { ANCHO_TARJETA, estiloCentrado } from '../../utils/disposicion';
 
 export const TOTAL_PASOS = 3;
 
@@ -11,8 +12,8 @@ export function Paso({ paso, icono, titulo, descripcion, onVolver, etiquetaVolve
   const s = estilos();
   return (
     <SafeAreaView style={s.pantalla} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={COMPORTAMIENTO_TECLADO}>
+        <ScrollView contentContainerStyle={[s.scroll, estiloCentrado(ANCHO_TARJETA + 48)]} keyboardShouldPersistTaps="handled">
           <View style={s.encabezado}>
             {onVolver ? (
               <Pressable onPress={onVolver} style={s.volver} hitSlop={6} accessibilityRole="button" accessibilityLabel={etiquetaVolver}>
