@@ -6,7 +6,6 @@ import {
   Easing,
   Image,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,9 +17,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { version as APP_VERSION } from '../../package.json';
 import { AMBIENTE } from '../config';
-import { Button, ErrorBox, Field, Ico, colors, conTema } from '../components/ui';
+import { Button, COMPORTAMIENTO_TECLADO, ErrorBox, Field, Ico, colors, conTema } from '../components/ui';
 import { LIMITES, PIN_LONGITUD, validarLogin, validarPin } from '../utils/validation';
 import { mensajeLogin, mensajePin } from '../utils/errors';
+import { ANCHO_TARJETA, estiloCentrado } from '../utils/disposicion';
 
 export default function Login() {
   const s = estilos();
@@ -104,9 +104,9 @@ export default function Login() {
   };
 
   return (
-    <KeyboardAvoidingView style={s.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={s.screen} behavior={COMPORTAMIENTO_TECLADO}>
       <ScrollView
-        contentContainerStyle={[s.scroll, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={[s.scroll, estiloCentrado(ANCHO_TARJETA + 48), { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { getPatient, getPatients } from '../api';
 import useFetch from '../hooks/useFetch';
-import { Button, Card, Chip, Empty, ErrorBox, Field, Ico, Loading, Screen, Skeleton, TriageBadge, colors } from '../components/ui';
+import { Button, Card, Chip, Empty, ErrorBox, Field, Ico, Loading, Rejilla, Screen, Skeleton, TriageBadge, colors } from '../components/ui';
 import { insigniaTriage } from '../theme/paletas';
 import { iniciales } from '../utils/fecha';
 import { fmtDate } from '../utils/triage';
@@ -13,7 +13,7 @@ function Dato({ k, v }) {
   if (v === null || v === undefined || v === '') return null;
   return (
     <View style={{ flexDirection: 'row', paddingVertical: 5 }}>
-      <Text style={{ width: 130, fontSize: 12, color: colors.faint }}>{k}</Text>
+      <Text style={{ width: '38%', maxWidth: 160, paddingRight: 8, fontSize: 12, color: colors.faint }}>{k}</Text>
       <Text style={{ flex: 1, fontSize: 13, color: colors.text, fontWeight: '600' }}>{String(v)}</Text>
     </View>
   );
@@ -80,7 +80,7 @@ export default function Patients({ navigation, route }) {
   const filtro = FILTROS.find((f) => f.id === nivel) || FILTROS[0];
 
   return (
-    <Screen title="Pacientes" icon="people-outline" subtitle={data ? `${list.length} paciente${list.length === 1 ? '' : 's'}${nivel ? ` · ${filtro.label}` : ''}` : undefined} onRefresh={refrescar} refreshing={refrescando}>
+    <Screen amplio title="Pacientes" icon="people-outline" subtitle={data ? `${list.length} paciente${list.length === 1 ? '' : 's'}${nivel ? ` · ${filtro.label}` : ''}` : undefined} onRefresh={refrescar} refreshing={refrescando}>
       <Button title="Nuevo paciente" icon="person-add-outline" onPress={() => navigation.navigate('NuevoPaciente')} style={{ marginBottom: 16 }} />
       <Field value={q} onChangeText={setQ} icon="search-outline" placeholder="Buscar por nombre, CURP o teléfono..." autoCapitalize="none" accessibilityLabel="Buscar paciente" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: -4, marginBottom: 14 }} accessibilityLabel="Filtrar por nivel de triage">
@@ -100,7 +100,7 @@ export default function Patients({ navigation, route }) {
         </>
       ) : (
         <>
-          {list.map((p) => (
+          <Rejilla>{list.map((p) => (
             <Card key={p.id} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
               <Pressable
                 onPress={() => setOpen(open === p.id ? null : p.id)}
@@ -122,7 +122,7 @@ export default function Patients({ navigation, route }) {
               </Pressable>
               {open === p.id ? <Ficha id={p.id} /> : null}
             </Card>
-          ))}
+          ))}</Rejilla>
         </>
       )}
     </Screen>

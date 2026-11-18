@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { getExistencias } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Badge, Button, Card, Empty, ErrorBox, Field, Loading, Screen, colors } from '../components/ui';
+import { Badge, Button, Card, Empty, ErrorBox, Field, Loading, Rejilla, Screen, colors } from '../components/ui';
 import { fmtDate } from '../utils/triage';
 
 const FILTERS = [['', 'Todos'], ['30', 'Caducan en 30 días'], ['vencidos', 'Vencidos']];
@@ -39,7 +39,7 @@ export default function Existencias({ navigation }) {
   }, [query, caduca, page]);
 
   return (
-    <Screen title="Existencias por lote" icon="cube-outline" iconColor={colors.teal}>
+    <Screen amplio title="Existencias por lote" icon="cube-outline" iconColor={colors.teal}>
       <Field value={q} onChangeText={setQ} placeholder="Buscar medicamento o lote..." autoCapitalize="none" style={{}} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20, flexGrow: 0 }}>
         {FILTERS.map(([id, label]) => (
@@ -49,7 +49,7 @@ export default function Existencias({ navigation }) {
         ))}
       </ScrollView>
       <ErrorBox message={error} />
-      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="cube-outline" text="No hay lotes para mostrar." /> : rows.map((l) => {
+      {loading && rows.length === 0 ? <Loading /> : rows.length === 0 ? <Empty icon="cube-outline" text="No hay lotes para mostrar." /> : <Rejilla>{rows.map((l) => {
         const c = caducidad(l.diasParaCaducar);
         return (
           <Card key={l.id} accent={c.color}>
@@ -64,7 +64,7 @@ export default function Existencias({ navigation }) {
             ) : null}
           </Card>
         );
-      })}
+      })}</Rejilla>}
       {rows.length < total ? <Button variant="soft" title={loading ? 'Cargando...' : `Cargar más (${rows.length} de ${total})`} disabled={loading} onPress={() => setPage(page + 1)} /> : null}
     </Screen>
   );

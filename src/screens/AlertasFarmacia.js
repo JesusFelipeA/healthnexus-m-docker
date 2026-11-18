@@ -15,6 +15,7 @@ import {
   Ico,
   Loading,
   Paginator,
+  Rejilla,
   Screen,
   colors,
 } from '../components/ui';
@@ -43,6 +44,7 @@ export default function AlertasFarmacia() {
 
   return (
     <Screen
+      amplio
       title="Alertas de inventario"
       icon="warning-outline"
       iconColor={colors.amber}
@@ -68,7 +70,7 @@ export default function AlertasFarmacia() {
             {data.total} alertas (se calculan al momento)
           </Text>
 
-          {paginated.map((a, i) => {
+          <Rejilla>{paginated.map((a, i) => {
             const t = TIPO[a.tipo] || {
               label: a.tipo,
               icon: 'alert-circle-outline',
@@ -125,7 +127,7 @@ export default function AlertasFarmacia() {
                 </Text>
               </Card>
             );
-          })}
+          })}</Rejilla>
 
           <Paginator
             page={page}

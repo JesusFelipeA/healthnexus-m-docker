@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, FlatList, KeyboardAvoidingView, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Navegacion from '@react-navigation/native';
 import { useMenu } from '../navigation/menuContext';
@@ -7,6 +7,8 @@ import { RUTAS_DE_MENU } from '../navigation/modulos';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { colors, conTema, insigniaTriage } from '../theme/paletas';
 import { triageInfo } from '../utils/triage';
+import { LETRA_COMPACTA, SEPARACION, enFilas, estiloCentrado } from '../utils/disposicion';
+import useDisposicion, { DisposicionContext, useDisposicionActual } from '../hooks/useDisposicion';
 export { default as Paginator } from './Paginator';
 
 // `colors` es la paleta del tema actual (claro u oscuro): ver src/theme/paletas.js
@@ -16,45 +18,58 @@ export const shadow = { shadowColor: '#111A3A', shadowOpacity: 0.06, shadowRadiu
 
 export const Ico = ({ name, size = 20, color = colors.text, style }) => <Icon name={name} size={size} color={color} style={style} />;
 
+/**
+ * Cómo deja espacio al teclado. Con la app de borde a borde (Android 15+ y edgeToEdgeEnabled),
+ * `adjustResize` ya no achica la ventana: en ambas plataformas se agrega padding abajo.
+ */
+export const COMPORTAMIENTO_TECLADO = 'padding';
+
 // useRoute puede no existir en los mocks de las pruebas
 const useRutaActual = typeof Navegacion.useRoute === 'function' ? Navegacion.useRoute : () => null;
 
 // Pantalla con encabezado y contenido con scroll.
 // En las pantallas que se abren desde la barra lateral, el encabezado muestra el botón de menú;
 // en las demás (detalle, alta) muestra "Volver". `onRefresh` activa "deslizar para actualizar".
-export function Screen({ title, subtitle, icon, iconColor = colors.teal, children, refreshing = false, onRefresh, right }) {
+// En pantallas grandes el contenido se centra con un ancho máximo: 720 dp para formularios y
+// detalles, o 1100 dp con `amplio` (listas que usan <Rejilla> para ir a 2 columnas).
+export function Screen({ title, subtitle, icon, iconColor = colors.teal, children, refreshing = false, onRefresh, right, amplio = false }) {
   const s = estilos();
+  const disp = useDisposicion({ amplio });
   const nav = Navegacion.useNavigation();
   const route = useRutaActual();
   const menu = useMenu();
   const conMenu = !!menu && !!route && RUTAS_DE_MENU.has(route.name);
   return (
-    <SafeAreaView style={s.screen} edges={['top']}>
-      <View style={s.header}>
-        {conMenu ? (
-          <BotonMenu style={s.back} />
-        ) : (
-          <Pressable onPress={() => nav.goBack()} hitSlop={12} style={s.back} accessibilityRole="button" accessibilityLabel="Volver">
-            <Ico name="chevron-back" size={22} />
-          </Pressable>
-        )}
-        {icon ? <Ico name={icon} size={20} color={iconColor} /> : null}
-        <View style={{ flex: 1 }}>
-          <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1}>{title}</Text>
-          {subtitle ? <Text style={s.headerSub} numberOfLines={1}>{subtitle}</Text> : null}
+    // La app dibuja de borde a borde (edgeToEdgeEnabled): Android ya no achica la ventana al abrir
+    // el teclado, así que el espacio lo deja KeyboardAvoidingView y el campo enfocado queda visible.
+    <KeyboardAvoidingView style={s.screen} behavior={COMPORTAMIENTO_TECLADO}>
+      <SafeAreaView style={s.screen} edges={['top']}>
+        <View style={s.header}>
+          {conMenu ? (
+            <BotonMenu style={s.back} />
+          ) : (
+            <Pressable onPress={() => nav.goBack()} hitSlop={12} style={s.back} accessibilityRole="button" accessibilityLabel="Volver">
+              <Ico name="chevron-back" size={22} />
+            </Pressable>
+          )}
+          {icon ? <Ico name={icon} size={20} color={iconColor} /> : null}
+          <View style={{ flex: 1 }}>
+            <Text style={s.headerTitle} accessibilityRole="header" numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
+            {subtitle ? <Text style={s.headerSub} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{subtitle}</Text> : null}
+          </View>
+          {right || null}
         </View>
-        {right || null}
-      </View>
-      <ScrollView
-        contentContainerStyle={s.content}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={onRefresh ? (
-          <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />
-        ) : undefined}
-      >
-        {children}
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView
+          contentContainerStyle={[s.content, estiloCentrado(disp.anchoMaximo)]}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={onRefresh ? (
+            <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} colors={[colors.teal]} tintColor={colors.teal} progressBackgroundColor={colors.surface} />
+          ) : undefined}
+        >
+          <DisposicionContext.Provider value={disp}>{children}</DisposicionContext.Provider>
+        </ScrollView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -69,12 +84,34 @@ export function BotonMenu({ color = colors.text, style }) {
   );
 }
 
+/**
+ * Lista de tarjetas en 1 o 2 columnas según el ancho disponible. En celular devuelve los hijos
+ * tal cual (nada cambia); en tablet u horizontal, dentro de un <Screen amplio>, los acomoda en filas.
+ */
+export function Rejilla({ children }) {
+  const s = estilos();
+  const disp = useDisposicionActual();
+  const items = React.Children.toArray(children).filter(Boolean);
+  if (disp.columnas <= 1) return <>{items}</>;
+  return (
+    <View>
+      {enFilas(items, disp.columnas).map((fila, i) => (
+        <View key={`fila-${i}`} style={s.rejillaFila} testID="rejilla-fila">
+          {fila.map((el) => <View key={el.key} style={s.rejillaCelda}>{el}</View>)}
+          {/* La última fila incompleta conserva el ancho de columna */}
+          {Array.from({ length: disp.columnas - fila.length }, (_, j) => <View key={`hueco-${j}`} style={s.rejillaCelda} />)}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export const Card = ({ children, accent, style }) => (
   <View style={[estilos().card, accent ? { borderLeftWidth: 5, borderLeftColor: accent } : null, style]}>{children}</View>
 );
 
 export const Badge = ({ text, color, bg }) => (
-  <View style={[estilos().badge, { backgroundColor: bg || `${color}26` }]}><Text style={[estilos().badgeText, { color }]}>{text}</Text></View>
+  <View style={[estilos().badge, { backgroundColor: bg || `${color}26` }]}><Text style={[estilos().badgeText, { color }]} maxFontSizeMultiplier={LETRA_COMPACTA}>{text}</Text></View>
 );
 
 const ROMANO = { rojo: 'I', naranja: 'II', amarillo: 'III', verde: 'IV', azul: 'V' };
@@ -88,7 +125,7 @@ export function TriageBadge({ nivel, compacto = false }) {
   return (
     <View style={[s.triage, { backgroundColor: ins.bg }]} accessible accessibilityLabel={ROMANO[nivel] ? `Triage nivel ${ROMANO[nivel]}, ${info.label}` : 'Sin triage'}>
       <View style={[s.triageDot, { backgroundColor: ins.dot }]} />
-      <Text style={[s.triageText, { color: ins.text }]} numberOfLines={1}>{compacto ? (ROMANO[nivel] || '—') : texto}</Text>
+      <Text style={[s.triageText, { color: ins.text }]} numberOfLines={1} maxFontSizeMultiplier={LETRA_COMPACTA}>{compacto ? (ROMANO[nivel] || '—') : texto}</Text>
     </View>
   );
 }
@@ -105,7 +142,7 @@ export function Chip({ label, active, onPress, dot, style }) {
       style={({ pressed }) => [s.chip, active && s.chipActivo, pressed && { opacity: 0.85 }, style]}
     >
       {dot ? <View style={[s.triageDot, { backgroundColor: dot }]} /> : null}
-      <Text style={[s.chipTexto, active && s.chipTextoActivo]}>{label}</Text>
+      <Text style={[s.chipTexto, active && s.chipTextoActivo]} maxFontSizeMultiplier={LETRA_COMPACTA}>{label}</Text>
     </Pressable>
   );
 }
@@ -127,7 +164,7 @@ export function Segmented({ opciones, valor, onChange, etiqueta }) {
             style={[s.segmento, activo && s.segmentoActivo]}
           >
             {o.icono ? <Ico name={o.icono} size={16} color={activo ? colors.tealDeep : colors.sub} /> : null}
-            <Text style={[s.segmentoTexto, activo && s.segmentoTextoActivo]}>{o.nombre}</Text>
+            <Text style={[s.segmentoTexto, activo && s.segmentoTextoActivo]} maxFontSizeMultiplier={LETRA_COMPACTA}>{o.nombre}</Text>
           </Pressable>
         );
       })}
@@ -292,7 +329,7 @@ export function Button({ title, icon, onPress, variant = 'primary', color = colo
       {loading ? <ActivityIndicator color={textColor} /> : (
         <>
           {icon ? <Ico name={icon} size={variant === 'soft' ? 18 : 20} color={disabled && variant === 'primary' ? colors.faint : textColor} /> : null}
-          <Text style={{ color: disabled && variant === 'primary' ? colors.faint : textColor, fontWeight: '700', fontSize: variant === 'soft' ? 14 : 16 }}>{title}</Text>
+          <Text style={{ color: disabled && variant === 'primary' ? colors.faint : textColor, fontWeight: '700', fontSize: variant === 'soft' ? 14 : 16, flexShrink: 1, textAlign: 'center' }} maxFontSizeMultiplier={LETRA_COMPACTA}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -306,18 +343,20 @@ const estilos = conTema((c) => StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: c.text, letterSpacing: -0.2 },
   headerSub: { fontSize: 12, color: c.sub, marginTop: 1 },
   content: { padding: 20, paddingBottom: 120 },
+  rejillaFila: { flexDirection: 'row', gap: SEPARACION },
+  rejillaCelda: { flex: 1, minWidth: 0 },
   card: { backgroundColor: c.surface, borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: c.line },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, alignSelf: 'flex-start' },
   badgeText: { fontSize: 12, fontWeight: '700' },
   triage: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, alignSelf: 'flex-start' },
   triageDot: { width: 8, height: 8, borderRadius: 4 },
   triageText: { fontSize: 12, fontWeight: '700' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, marginRight: 8 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 36, paddingVertical: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: c.line, backgroundColor: c.surface, marginRight: 8 },
   chipActivo: { backgroundColor: c.mint, borderColor: c.teal },
   chipTexto: { fontSize: 13, fontWeight: '600', color: c.sub },
   chipTextoActivo: { color: c.tealDeep, fontWeight: '700' },
   segmentado: { flexDirection: 'row', backgroundColor: c.surfaceAlt, borderRadius: 12, padding: 4, gap: 4 },
-  segmento: { flex: 1, flexDirection: 'row', gap: 6, height: 40, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  segmento: { flex: 1, flexDirection: 'row', gap: 6, minHeight: 40, paddingVertical: 6, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   segmentoActivo: { backgroundColor: c.surface, borderWidth: 1, borderColor: c.line },
   segmentoTexto: { fontSize: 13, fontWeight: '600', color: c.sub },
   segmentoTextoActivo: { color: c.tealDeep, fontWeight: '700' },
@@ -339,8 +378,8 @@ const estilos = conTema((c) => StyleSheet.create({
   overlay: { flex: 1, backgroundColor: c.overlay, justifyContent: 'center', padding: 24 },
   sheet: { backgroundColor: c.surface, borderRadius: 18, maxHeight: '70%', overflow: 'hidden' },
   option: { paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: c.line },
-  btnPrimary: { height: 52, borderRadius: 12, backgroundColor: c.teal, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  btnPrimary: { minHeight: 52, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, backgroundColor: c.teal, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnDeshabilitado: { backgroundColor: c.surfaceAlt },
-  btnOutline: { height: 52, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  btnOutline: { minHeight: 52, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnSoft: { marginTop: 12, minHeight: 44, paddingVertical: 10, borderRadius: 12, backgroundColor: c.mint, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 }));

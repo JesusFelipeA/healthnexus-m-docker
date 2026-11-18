@@ -15,6 +15,7 @@ import {
   Ico,
   Loading,
   Paginator,
+  Rejilla,
   Screen,
   colors,
 } from '../components/ui';
@@ -44,6 +45,7 @@ export default function Seguimiento() {
 
   return (
     <Screen
+      amplio
       title="Seguimiento"
       icon="analytics-outline"
       iconColor={colors.amber}
@@ -59,7 +61,7 @@ export default function Seguimiento() {
         />
       ) : (
         <>
-          {paginated.map(s => (
+          <Rejilla>{paginated.map(s => (
             <Card key={s.id}>
               <View
                 style={{
@@ -138,7 +140,7 @@ export default function Seguimiento() {
                 ) : null}
               </View>
             </Card>
-          ))}
+          ))}</Rejilla>
 
           <Paginator
             page={page}
